@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기숙사 페이지 레이아웃 예시 v2</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+
+  h1 { text-align: center; margin-bottom: 6px; font-size: 18px; color: #333; }
+  .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 30px; }
+
+  .layout-label {
+    background: #333; color: white;
+    padding: 8px 16px; border-radius: 20px;
+    display: inline-block; margin-bottom: 12px;
+    font-size: 13px; font-weight: bold;
+  }
+  .layout-section { margin-bottom: 60px; }
+  .layout-note { text-align: center; margin-top: 10px; font-size: 12px; color: #888; line-height: 1.6; }
+
+  .phone {
+    width: 375px; background: white;
+    border-radius: 36px; border: 8px solid #222;
+    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    margin: 0 auto;
+  }
+  .phone-header {
+    background: #1a1a2e; color: white;
+    padding: 16px 20px 14px; font-size: 17px; font-weight: bold;
+  }
+  .phone-body { padding: 16px; max-height: 680px; overflow-y: auto; }
+
+  /* ---- 공통 요소 ---- */
+  .section-title {
+    font-size: 12px; font-weight: bold; color: #999;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin: 18px 0 8px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  .divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+
+  /* ---- 층 배지 ---- */
+  .floor-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    font-weight: bold; font-size: 12px; flex-shrink: 0;
+  }
+  .floor-b1 { background: #e8eaf6; color: #3949ab; }
+  .floor-1  { background: #e8f5e9; color: #2e7d32; }
+  .floor-2  { background: #e3f2fd; color: #1565c0; }
+  .floor-4  { background: #fce4ec; color: #c2185b; }
+  .floor-all{ background: #f3e5f5; color: #6a1b9a; }
+
+  /* ======================= */
+  /* 레이아웃 A: 층 타임라인형  */
+  /* ======================= */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before {
+    content: '';
+    position: absolute; left: 17px; top: 0; bottom: 0;
+    width: 2px; background: #eee;
+  }
+  .tl-item {
+    position: relative;
+    margin-bottom: 16px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .tl-dot {
+    position: absolute; left: -18px; top: 8px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: white; border: 2px solid #ddd;
+    flex-shrink: 0;
+  }
+  .tl-content {
+    background: #fafafa; border-radius: 12px;
+    padding: 12px 14px; flex: 1;
+    border: 1px solid #eee;
+  }
+  .tl-floor-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .tl-floor-name { font-weight: bold; font-size: 14px; color: #222; }
+  .tl-rows { display: flex; flex-direction: column; gap: 6px; }
+  .tl-row { font-size: 13px; color: #555; line-height: 1.5; display: flex; gap: 6px; }
+  .tl-row .icon { flex-shrink: 0; }
+
+  /* ============================ */
+  /* 레이아웃 B: 층 카드 + 카테고리 */
+  /* ============================ */
+  .floor-card {
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+  }
+  .floor-card-header {
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .floor-card-title { font-weight: bold; font-size: 15px; }
+  .floor-card-body { padding: 10px 14px 12px; }
+  .fc-row {
+    font-size: 13px; color: #444;
+    padding: 7px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: flex; gap: 8px; line-height: 1.5;
+  }
+  .fc-row:last-child { border-bottom: none; }
+
+  .fc-b1 .floor-card-header { background: #e8eaf6; }
+  .fc-b1 .floor-card-body  { background: #f5f6ff; }
+  .fc-1  .floor-card-header { background: #e8f5e9; }
+  .fc-1  .floor-card-body  { background: #f5faf5; }
+  .fc-2  .floor-card-header { background: #e3f2fd; }
+  .fc-2  .floor-card-body  { background: #f5faff; }
+  .fc-4  .floor-card-header { background: #fce4ec; }
+  .fc-4  .floor-card-body  { background: #fff5f8; }
+  .fc-all .floor-card-header { background: #f3e5f5; }
+  .fc-all .floor-card-body  { background: #fdf5ff; }
+
+  .cat-card {
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 10px;
+    border: 1px solid #eee;
+  }
+  .cat-header {
+    padding: 12px 14px; background: white;
+    display: flex; align-items: center; gap: 10px;
+    font-weight: bold; font-size: 14px; color: #333;
+  }
+  .cat-body { background: #fafafa; padding: 10px 14px 12px; }
+  .cat-row {
+    font-size: 13px; color: #444;
+    padding: 7px 0; border-bottom: 1px solid #eee;
+    display: flex; gap: 8px; line-height: 1.5;
+  }
+  .cat-row:last-child { border-bottom: none; }
+  .cat-row.danger { color: #c0392b; font-weight: 500; }
+
+  .pin-chip {
+    background: #fff3cd; border-radius: 8px;
+    padding: 6px 10px; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 6px;
+    margin: 4px 0 2px;
+  }
+  .pin-chip b { font-size: 18px; letter-spacing: 3px; color: #d35400; }
+
+  /* ===================== */
+  /* 레이아웃 C: 층별 섹션   */
+  /* (탭 없이 스크롤, 층 헤더로 구분) */
+  /* ===================== */
+  .sticky-floor-header {
+    position: sticky; top: 0; z-index: 10;
+    background: white; padding: 10px 0 8px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 2px solid #eee; margin-bottom: 10px;
+  }
+  .sticky-floor-header .floor-badge { width: 44px; height: 44px; font-size: 13px; border-radius: 12px; }
+  .sfh-text { font-weight: bold; font-size: 15px; color: #222; }
+  .sfh-sub { font-size: 12px; color: #999; }
+
+  .s-row {
+    font-size: 13px; color: #444; padding: 10px 4px;
+    border-bottom: 1px solid #f0f0f0; display: flex; gap: 10px;
+    align-items: flex-start; line-height: 1.5;
+  }
+  .s-row:last-child { border-bottom: none; }
+  .s-row.danger { color: #c0392b; }
+  .s-row .label {
+    background: #eee; color: #555;
+    font-size: 11px; padding: 2px 7px; border-radius: 8px;
+    white-space: nowrap; align-self: center; flex-shrink: 0;
+  }
+  .s-row .label.red { background: #fde8e8; color: #c0392b; }
+  .floor-section { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<h1>기숙사 페이지 레이아웃 예시 v2</h1>
+<p class="subtitle">층별 구조 + 카테고리 방식 — 3가지 변형</p>
+
+
+<!-- ========================= -->
+<!--  레이아웃 A: 타임라인형     -->
+<!-- ========================= -->
+<div class="layout-section">
+  <div class="layout-label">A — 층 타임라인형</div>
+  <div class="phone">
+    <div class="phone-header">🏠 寮のご案内</div>
+    <div class="phone-body">
+
+      <div class="section-title">🏢 フロアガイド</div>
+      <div class="timeline">
+
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-content">
+            <div class="tl-floor-row">
+              <div class="floor-badge floor-b1">B1</div>
+              <div class="tl-floor-name">地下</div>
+            </div>
+            <div class="tl-rows">
+              <div class="tl-row"><span class="icon">📚</span><span>studyroom（右側）— 飲み物のみ</span></div>
+              <div class="tl-row"><span class="icon">🚻</span><span>トイレあり</span></div>
+              <div class="tl-row"><span class="icon">❄️</span><span>エアコン部屋 — 退室時消す</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-content">
+            <div class="tl-floor-row">
+              <div class="floor-badge floor-1">1F</div>
+              <div class="tl-floor-name">1階</div>
+            </div>
+            <div class="tl-rows">
+              <div class="tl-row"><span class="icon">🚪</span><span>共同玄関 — 朝6:00 解錠</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-content">
+            <div class="tl-floor-row">
+              <div class="floor-badge floor-2">2F</div>
+              <div class="tl-floor-name">2階</div>
+            </div>
+            <div class="tl-rows">
+              <div class="tl-row"><span class="icon">🧺</span><span>洗濯機（男性用）</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-content">
+            <div class="tl-floor-row">
+              <div class="floor-badge floor-4">4F</div>
+              <div class="tl-floor-name">4階</div>
+            </div>
+            <div class="tl-rows">
+              <div class="tl-row"><span class="icon">🧺</span><span>洗濯機（女性用）</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-content">
+            <div class="tl-floor-row">
+              <div class="floor-badge floor-all">全</div>
+              <div class="tl-floor-name">各階</div>
+            </div>
+            <div class="tl-rows">
+              <div class="tl-row"><span class="icon">💧</span><span>ウォーターサーバー（1階 ×）</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <hr class="divider">
+      <div class="section-title">📋 その他</div>
+
+      <div class="cat-card">
+        <div class="cat-header">🗑️ ゴミ捨て</div>
+        <div class="cat-body">
+          <div class="cat-row">🟠 生ゴミ（オレンジ蓋）<span class="pin-chip">🔐 <b>389</b></span></div>
+          <div class="cat-row">♻️ ペットボトルは分別 / 他はまとめて</div>
+        </div>
+      </div>
+
+      <div class="cat-card">
+        <div class="cat-header">⚠️ 規則</div>
+        <div class="cat-body">
+          <div class="cat-row danger">🚫 お酒・タバコ 禁止</div>
+          <div class="cat-row danger">🚫 異性の階 立ち入り禁止</div>
+          <div class="cat-row danger">🚫 寮生以外 立ち入り禁止</div>
+          <div class="cat-row">🔑 鍵紛失 — 15,000ウォン</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <p class="layout-note">층을 수직 타임라인으로 표현<br>위→아래로 지하→고층 흐름이 직관적</p>
+</div>
+
+
+<!-- ================================== -->
+<!--  레이아웃 B: 층 카드 + 카테고리 카드  -->
+<!-- ================================== -->
+<div class="layout-section">
+  <div class="layout-label">B — 층 카드 + 카테고리 카드</div>
+  <div class="phone">
+    <div class="phone-header">🏠 寮のご案内</div>
+    <div class="phone-body">
+
+      <div class="section-title">🏢 フロアガイド</div>
+
+      <div class="floor-card fc-b1">
+        <div class="floor-card-header">
+          <div class="floor-badge floor-b1">B1</div>
+          <div class="floor-card-title">地下</div>
+        </div>
+        <div class="floor-card-body">
+          <div class="fc-row">📚 studyroom（右側）— 飲み物のみ</div>
+          <div class="fc-row">🚻 トイレあり</div>
+          <div class="fc-row">❄️ エアコン部屋 — 退室時は消す</div>
+        </div>
+      </div>
+
+      <div class="floor-card fc-1">
+        <div class="floor-card-header">
+          <div class="floor-badge floor-1">1F</div>
+          <div class="floor-card-title">1階</div>
+        </div>
+        <div class="floor-card-body">
+          <div class="fc-row">🚪 共同玄関 — 朝6:00 解錠</div>
+        </div>
+      </div>
+
+      <div class="floor-card fc-2">
+        <div class="floor-card-header">
+          <div class="floor-badge floor-2">2F</div>
+          <div class="floor-card-title">2階 — 洗濯機（男性）</div>
+        </div>
+        <div class="floor-card-body">
+          <div class="fc-row">📱 専用アプリ「メタクラブ」で決済</div>
+          <div class="fc-row">💵 チャージは現金のみ</div>
+        </div>
+      </div>
+
+      <div class="floor-card fc-4">
+        <div class="floor-card-header">
+          <div class="floor-badge floor-4">4F</div>
+          <div class="floor-card-title">4階 — 洗濯機（女性）</div>
+        </div>
+        <div class="floor-card-body">
+          <div class="fc-row">📱 専用アプリ「メタクラブ」で決済</div>
+          <div class="fc-row">💵 チャージは現金のみ</div>
+        </div>
+      </div>
+
+      <div class="floor-card fc-all">
+        <div class="floor-card-header">
+          <div class="floor-badge floor-all">全</div>
+          <div class="floor-card-title">各階</div>
+        </div>
+        <div class="floor-card-body">
+          <div class="fc-row">💧 ウォーターサーバー（1階 ×）</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-title">📋 その他</div>
+
+      <div class="cat-card">
+        <div class="cat-header">🗑️ ゴミ捨て</div>
+        <div class="cat-body">
+          <div class="cat-row">
+            🟠 生ゴミ（オレンジ蓋）
+            <div class="pin-chip">🔐 <b>389</b></div>
+          </div>
+          <div class="cat-row">♻️ ペットボトルは分別 / 他はまとめて</div>
+        </div>
+      </div>
+
+      <div class="cat-card">
+        <div class="cat-header">🍳 料理室</div>
+        <div class="cat-body">
+          <div class="cat-row danger">🚫 包丁を使うような料理は禁止</div>
+        </div>
+      </div>
+
+      <div class="cat-card">
+        <div class="cat-header">⚠️ 規則</div>
+        <div class="cat-body">
+          <div class="cat-row danger">🚫 お酒・タバコ 禁止</div>
+          <div class="cat-row danger">🚫 異性の階 立ち入り禁止</div>
+          <div class="cat-row danger">🚫 寮生以外 立ち入り禁止</div>
+          <div class="cat-row">🔑 鍵紛失 — 15,000ウォン</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <p class="layout-note">층마다 독립 카드 / 항목 수에 관계없이 자연스러움<br>카테고리 카드와 시각적으로 구분됨</p>
+</div>
+
+
+<!-- ================================== -->
+<!--  레이아웃 C: 층별 섹션 스크롤        -->
+<!-- ================================== -->
+<div class="layout-section">
+  <div class="layout-label">C — 층별 섹션 스크롤형</div>
+  <div class="phone">
+    <div class="phone-header">🏠 寮のご案内</div>
+    <div class="phone-body">
+
+      <div class="floor-section">
+        <div class="sticky-floor-header">
+          <div class="floor-badge floor-b1">B1</div>
+          <div>
+            <div class="sfh-text">地下</div>
+          </div>
+        </div>
+        <div class="s-row"><span>📚</span><span>studyroom（右側）— 飲み物のみ</span></div>
+        <div class="s-row"><span>🚻</span><span>トイレあり</span></div>
+        <div class="s-row"><span>❄️</span><span>エアコン部屋 — 退室時は必ず消すこと</span></div>
+      </div>
+
+      <div class="floor-section">
+        <div class="sticky-floor-header">
+          <div class="floor-badge floor-1">1F</div>
+          <div>
+            <div class="sfh-text">1階</div>
+          </div>
+        </div>
+        <div class="s-row"><span>🚪</span><span>共同玄関 — 朝 6:00 解錠</span></div>
+      </div>
+
+      <div class="floor-section">
+        <div class="sticky-floor-header">
+          <div class="floor-badge floor-2">2F</div>
+          <div>
+            <div class="sfh-text">2階</div>
+            <div class="sfh-sub">洗濯機（男性）</div>
+          </div>
+        </div>
+        <div class="s-row"><span>📱</span><span>「メタクラブ」アプリで決済</span></div>
+        <div class="s-row"><span>💵</span><span>チャージは現金のみ</span></div>
+      </div>
+
+      <div class="floor-section">
+        <div class="sticky-floor-header">
+          <div class="floor-badge floor-4">4F</div>
+          <div>
+            <div class="sfh-text">4階</div>
+            <div class="sfh-sub">洗濯機（女性）</div>
+          </div>
+        </div>
+        <div class="s-row"><span>📱</span><span>「メタクラブ」アプリで決済</span></div>
+        <div class="s-row"><span>💵</span><span>チャージは現金のみ</span></div>
+      </div>
+
+      <div class="floor-section">
+        <div class="sticky-floor-header">
+          <div class="floor-badge floor-all">全</div>
+          <div>
+            <div class="sfh-text">各階</div>
+          </div>
+        </div>
+        <div class="s-row"><span>💧</span><span>ウォーターサーバー <span class="label red">1階 ×</span></span></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="s-row"><span>🗑️</span><span><b>生ゴミ（オレンジ蓋）</b> — 暗証番号 <span class="label">389</span></span></div>
+      <div class="s-row"><span>♻️</span><span>ペットボトルは分別 / 他はまとめて</span></div>
+      <div class="s-row"><span>🍳</span><span>料理室 — 包丁使用 <span class="label red">×</span></span></div>
+      <div class="s-row danger"><span>🚫</span><span>お酒・タバコ禁止 / 異性の階立入禁止</span></div>
+      <div class="s-row"><span>🔑</span><span>鍵紛失 — 15,000ウォン</span></div>
+
+    </div>
+  </div>
+  <p class="layout-note">층 헤더가 스크롤 시 상단에 고정(sticky)<br>별도 탭 없이 위→아래로 자연스럽게 스크롤</p>
+</div>
+
+</body>
+</html>
