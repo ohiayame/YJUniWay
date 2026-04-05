@@ -71,7 +71,7 @@ CREATE TABLE dormitory_sections (
   title_ja     VARCHAR(100) NOT NULL COMMENT '섹션 제목 (일본어)',
   subtitle_ko  VARCHAR(100)          COMMENT '부제목 (한국어) ex) 세탁기(남성)',
   subtitle_ja  VARCHAR(100)          COMMENT '부제목 (일본어) ex) 洗濯機（男性）',
-  icon         VARCHAR(10)           COMMENT '이모지 아이콘',
+  sort_order   INT          NOT NULL DEFAULT 0 COMMENT '표시 순서',
   PRIMARY KEY (id)
 );
 
@@ -81,8 +81,13 @@ CREATE TABLE dormitory_sections (
 CREATE TABLE dormitory_items (
   id           INT          NOT NULL AUTO_INCREMENT,
   section_id   INT          NOT NULL COMMENT 'FK → dormitory_sections id',
-  content_ko   TEXT         NOT NULL COMMENT '항목 내용 (한국어)',
-  content_ja   TEXT         NOT NULL COMMENT '항목 내용 (일본어)',
+  text_ko      TEXT         NOT NULL COMMENT '항목 내용 (한국어)',
+  text_ja      TEXT         NOT NULL COMMENT '항목 내용 (일본어)',
+  warning_ko   TEXT                  COMMENT '경고 문구 (한국어)',
+  warning_ja   TEXT                  COMMENT '경고 문구 (일본어)',
+  pin          VARCHAR(20)           COMMENT '암호 (쓰레기통 비밀번호 등)',
+  is_danger    TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '금지 규칙 여부',
+  sort_order   INT          NOT NULL DEFAULT 0 COMMENT '표시 순서',
   PRIMARY KEY (id),
   INDEX idx_section (section_id),
   CONSTRAINT fk_items_section
