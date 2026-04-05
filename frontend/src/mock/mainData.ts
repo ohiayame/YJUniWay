@@ -49,8 +49,7 @@ export const mockTomorrowGathering: { time: string; location_ko: string; locatio
 };
 
 export const mockSettings: AppSettings = {
-  curfew_time: '24:00',
-  roll_call_time: '23:00',
+  curfew_time: '22:00',
   wifi_ssid: 'YJU_Guest',
   wifi_password: 'yjuguest2025',
   school_address_ko: '대구광역시 북구 영진로 20',

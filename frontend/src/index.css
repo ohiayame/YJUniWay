@@ -66,6 +66,21 @@ body {
   margin: 0;
 }
 
+.copy-btn {
+  background: #000000;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.copy-btn:active {
+  background: #535353;
+  transform: scale(0.94);
+}
+
 h1,
 h2 {
   font-family: var(--heading);

@@ -7,7 +7,8 @@ import WifiIcon from '@mui/icons-material/Wifi';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import CallIcon from '@mui/icons-material/Call';
-import campusMap from '../../assets/campus-map.png';
+import campusMapKR from '../../assets/campus-map_KR.png';
+import campusMapJP from '../../assets/campus-map_JP.png';
 import yjuLogo from '../../assets/yju.png';
 import BottomTab from '../../components/BottomTab';
 import { mockTodaySchedules, mockTomorrowGathering, mockSettings, mockEmergencyContacts } from '../../mock/mainData';
@@ -79,9 +80,6 @@ const MainPage = () => {
           padding: 16,
           marginBottom: 10,
         }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: mockTodaySchedules.length > 1 ? 10 : 6 }}>
-            TODAY{mockTodaySchedules.length > 1 ? ` · ${mockTodaySchedules.length}가지` : ''}
-          </div>
 
           {mockTodaySchedules.length === 0 ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -108,7 +106,7 @@ const MainPage = () => {
             <>
               <div style={{
                 marginTop: 0,
-                maxHeight: 130,
+                maxHeight: 150,
                 overflowY: 'auto',
                 scrollbarWidth: 'thin' as const,
               }}>
@@ -176,71 +174,10 @@ const MainPage = () => {
           }}>
             <InboxIcon sx={{ fontSize: 22, color: '#ccc' }} />
             <div style={{ fontSize: 13, color: '#bbb' }}>
-              {isKo ? '집합 정보가 아직 등록되지 않았습니다' : 'まだ集合情報が登録されていません'}
+              {isKo ? '미정' : '未定'}
             </div>
           </div>
         )}
-
-        {/* 통금 / 점호 */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          <div style={{
-            flex: 1, textAlign: 'center', padding: '12px 8px',
-            background: 'white', border: '1px solid #eee', borderRadius: 14,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-          }}>
-            <NightsStayIcon sx={{ fontSize: 20, color: '#555' }} />
-            <div style={{ fontSize: 14, fontWeight: 'bold', marginTop: 4 }}>
-              {mockSettings.curfew_time ?? (isKo ? '미정' : '未定')}
-            </div>
-            <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>
-              {isKo ? '통금' : '門限'}
-            </div>
-          </div>
-          <div style={{
-            flex: 1, textAlign: 'center', padding: '12px 8px',
-            background: 'white', border: '1px solid #eee', borderRadius: 14,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-          }}>
-            <AssignmentIcon sx={{ fontSize: 20, color: '#555' }} />
-            <div style={{ fontSize: 14, fontWeight: 'bold', marginTop: 4 }}>
-              {mockSettings.roll_call_time ?? (isKo ? '미정' : '未定')}
-            </div>
-            <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>
-              {isKo ? '점호' : '点呼'}
-            </div>
-          </div>
-        </div>
-
-        {/* WiFi */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          background: '#f7f7f7',
-          borderRadius: 12,
-          padding: '12px 14px',
-          marginBottom: 10,
-        }}>
-          <WifiIcon sx={{ fontSize: 22, color: '#555' }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 'bold', color: '#111' }}>{mockSettings.wifi_ssid}</div>
-            <div style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>{mockSettings.wifi_password}</div>
-          </div>
-          <button
-            onClick={() => navigator.clipboard.writeText(mockSettings.wifi_password ?? '')}
-            style={{
-              background: '#1a1a2e',
-              color: 'white',
-              border: 'none',
-              padding: '6px 14px',
-              borderRadius: 20,
-              fontSize: 12,
-              cursor: 'pointer',
-            }}
-          >
-            {isKo ? '복사' : 'コピー'}
-          </button>
-        </div>
 
         {/* 공지 */}
         {(isKo ? mockSettings.notice_ko : mockSettings.notice_ja) && (
@@ -259,11 +196,66 @@ const MainPage = () => {
           </div>
         )}
 
+        {/* 통금 / 점호 */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <div style={{
+            flex: 1, textAlign: 'center', padding: '12px 8px',
+            background: 'white', border: '1px solid #eee', borderRadius: 14,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+          }}>
+            <AssignmentIcon sx={{ fontSize: 20, color: '#555' }} />
+            <div style={{ fontSize: 14, fontWeight: 'bold', marginTop: 4 }}>
+              {mockSettings.curfew_time ?? (isKo ? '미정' : '未定')}
+            </div>
+            <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>
+              {isKo ? '통금/점호' : '門限/点呼'}
+            </div>
+          </div>
+          <div style={{
+            flex: 1, textAlign: 'center', padding: '12px 8px',
+            background: 'white', border: '1px solid #eee', borderRadius: 14,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+          }}>
+            <NightsStayIcon sx={{ fontSize: 20, color: '#555' }} />
+            <div style={{ fontSize: 14, fontWeight: 'bold', marginTop: 4 }}>
+              24:00 ~ 6:00 
+            </div>
+            <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>
+              {isKo ? '잠김' : '施錠'}
+            </div>
+          </div>
+        </div>
+
+        {/* WiFi */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          background: '#f7f7f7',
+          borderRadius: 12,
+          padding: '12px 14px',
+          marginBottom: 10,
+        }}>
+          <WifiIcon sx={{ fontSize: 22, color: '#555' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 'bold', color: '#111' }}>{isKo ? '생활관' : '生活館'} WIFI : {mockSettings.wifi_ssid}</div>
+            <div style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>password : {mockSettings.wifi_password}</div>
+          </div>
+          <button
+            className="copy-btn"
+            onClick={() => navigator.clipboard.writeText(mockSettings.wifi_password ?? '')}
+          >
+            {isKo ? '복사' : 'コピー'}
+          </button>
+        </div>
+
+        
+
         {/* 교내 지도 */}
         <SectionLabel>{isKo ? '교내 지도' : 'キャンパスマップ'}</SectionLabel>
         <div style={{ borderRadius: 14, overflow: 'hidden', marginBottom: 10, border: '1px solid #eee', position: 'relative' }}>
           <img
-            src={campusMap}
+            src={isKo ? campusMapKR : campusMapJP}
             alt={isKo ? '교내 지도' : 'キャンパスマップ'}
             style={{ width: '100%', display: 'block', touchAction: 'pinch-zoom' }}
           />
