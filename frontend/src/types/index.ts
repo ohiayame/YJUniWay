@@ -30,20 +30,24 @@ export interface DormitorySection {
   title_ja: string;
   subtitle_ko: string | null;
   subtitle_ja: string | null;
-  icon: string | null;
+  sort_order: number;
   items: DormitoryItem[];
 }
 
 export interface DormitoryItem {
   id: number;
   section_id: number;
-  content_ko: string;
-  content_ja: string;
+  text_ko: string;
+  text_ja: string;
+  warning_ko: string | null;
+  warning_ja: string | null;
+  pin: string | null;
+  is_danger: boolean;
+  sort_order: number;
 }
 
 export interface AppSettings {
   curfew_time: string | null;
-  roll_call_time: string | null;
   wifi_ssid: string | null;
   wifi_password: string | null;
   school_address_ko: string | null;
@@ -72,4 +76,6 @@ export interface Admin {
   student_id: string | null;
   phone: string;
   role: 'professor' | 'staff';
+  is_approved: boolean;
+  password: string;
 }

@@ -20,7 +20,7 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
     color: '#bbb',
     letterSpacing: 1,
     textTransform: 'uppercase' as const,
-    margin: '14px 0 8px',
+    margin: '0 0 8px',
   }}>
     {children}
   </div>

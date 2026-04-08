@@ -4,7 +4,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 7일 (월) 입국 · 오리엔테이션 ──
   {
     id: 1,
-    date: '2025-04-07',
+    date: '2026-04-07',
     time_start: '13:00',
     time_end: '15:00',
     title_ko: '공항 픽업 · 기숙사 체크인',
@@ -17,7 +17,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 2,
-    date: '2025-04-07',
+    date: '2026-04-07',
     time_start: '16:00',
     time_end: '17:30',
     title_ko: '입학 오리엔테이션',
@@ -30,7 +30,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 3,
-    date: '2025-04-07',
+    date: '2026-04-07',
     time_start: '18:30',
     time_end: '20:00',
     title_ko: '환영 만찬',
@@ -43,7 +43,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 4,
-    date: '2025-04-07',
+    date: '2026-04-07',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -58,7 +58,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 8일 (화) 캠퍼스 투어 · 한국어 수업 ──
   {
     id: 5,
-    date: '2025-04-08',
+    date: '2026-04-08',
     time_start: '09:30',
     time_end: '11:30',
     title_ko: '캠퍼스 투어',
@@ -71,7 +71,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 6,
-    date: '2025-04-08',
+    date: '2026-04-08',
     time_start: '13:00',
     time_end: '15:00',
     title_ko: '한국어 기초 수업',
@@ -84,7 +84,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 7,
-    date: '2025-04-08',
+    date: '2026-04-08',
     time_start: '15:30',
     time_end: '17:00',
     title_ko: 'K-POP 댄스 체험',
@@ -97,7 +97,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 8,
-    date: '2025-04-08',
+    date: '2026-04-08',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -112,7 +112,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 9일 (수) 한국어 수업 · 전통문화 ──
   {
     id: 9,
-    date: '2025-04-09',
+    date: '2026-04-09',
     time_start: '10:00',
     time_end: '12:00',
     title_ko: '한국어 수업',
@@ -125,7 +125,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 10,
-    date: '2025-04-09',
+    date: '2026-04-09',
     time_start: '14:00',
     time_end: '16:30',
     title_ko: '전통 문화 체험 (한복·다도)',
@@ -138,7 +138,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 11,
-    date: '2025-04-09',
+    date: '2026-04-09',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -153,7 +153,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 10일 (목) 자유 탐방 ──
   {
     id: 12,
-    date: '2025-04-10',
+    date: '2026-04-10',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -168,7 +168,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 11일 (금) 현장 견학 ──
   {
     id: 13,
-    date: '2025-04-11',
+    date: '2026-04-11',
     time_start: '08:30',
     time_end: null,
     title_ko: '버스 집합',
@@ -181,7 +181,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 14,
-    date: '2025-04-11',
+    date: '2026-04-11',
     time_start: '10:00',
     time_end: '16:00',
     title_ko: '경주 역사 유적 견학',
@@ -194,7 +194,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 15,
-    date: '2025-04-11',
+    date: '2026-04-11',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -209,7 +209,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 12일 (토) 자유 탐방 ──
   {
     id: 16,
-    date: '2025-04-12',
+    date: '2026-04-12',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -252,7 +252,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 13일 (일) 휴식 ──
   {
     id: 17,
-    date: '2025-04-13',
+    date: '2026-04-13',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -267,7 +267,7 @@ export const mockSchedules: Schedule[] = [
   // ── 2주차 4월 14일 (월) ──
   {
     id: 20,
-    date: '2025-04-14',
+    date: '2026-04-14',
     time_start: '10:00',
     time_end: '12:00',
     title_ko: '한국어 수업',
@@ -280,7 +280,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 21,
-    date: '2025-04-14',
+    date: '2026-04-14',
     time_start: '14:00',
     time_end: '16:00',
     title_ko: '요리 체험 (비빔밥)',
@@ -293,7 +293,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 22,
-    date: '2025-04-14',
+    date: '2026-04-14',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -308,7 +308,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 15일 (화) ──
   {
     id: 23,
-    date: '2025-04-15',
+    date: '2026-04-15',
     time_start: '09:00',
     time_end: '11:00',
     title_ko: '한국어 수업',
@@ -321,7 +321,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 24,
-    date: '2025-04-15',
+    date: '2026-04-15',
     time_start: '13:30',
     time_end: '15:30',
     title_ko: '대구 시내 투어',
@@ -334,7 +334,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 25,
-    date: '2025-04-15',
+    date: '2026-04-15',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -349,7 +349,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 16일 (수) ──
   {
     id: 26,
-    date: '2025-04-16',
+    date: '2026-04-16',
     time_start: '10:00',
     time_end: '12:00',
     title_ko: '한국어 수업',
@@ -362,7 +362,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 27,
-    date: '2025-04-16',
+    date: '2026-04-16',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -377,7 +377,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 17일 (목) 자유 탐방 ──
   {
     id: 28,
-    date: '2025-04-17',
+    date: '2026-04-17',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -392,7 +392,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 18일 (금) 졸업식 견학 ──
   {
     id: 29,
-    date: '2025-04-18',
+    date: '2026-04-18',
     time_start: '10:00',
     time_end: '12:00',
     title_ko: '수료식',
@@ -405,7 +405,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 30,
-    date: '2025-04-18',
+    date: '2026-04-18',
     time_start: '13:00',
     time_end: '15:00',
     title_ko: '환송 만찬',
@@ -418,7 +418,7 @@ export const mockSchedules: Schedule[] = [
   },
   {
     id: 31,
-    date: '2025-04-18',
+    date: '2026-04-18',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -433,7 +433,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 19일 (토) 자유 탐방 ──
   {
     id: 32,
-    date: '2025-04-19',
+    date: '2026-04-19',
     time_start: '23:00',
     time_end: null,
     title_ko: '점호',
@@ -448,7 +448,7 @@ export const mockSchedules: Schedule[] = [
   // ── 4월 20일 (일) 귀국 ──
   {
     id: 33,
-    date: '2025-04-20',
+    date: '2026-04-20',
     time_start: '09:00',
     time_end: null,
     title_ko: '공항 이동 · 귀국',
@@ -462,7 +462,7 @@ export const mockSchedules: Schedule[] = [
 ];
 
 /** 점호만 있는 날 (자유 탐방) */
-export const FREE_DAYS = new Set(['2025-04-10', '2025-04-12', '2025-04-13', '2025-04-17', '2025-04-19']);
+export const FREE_DAYS = new Set(['2026-04-10', '2026-04-12', '2026-04-13', '2026-04-17', '2026-04-19']);
 
 /** 날짜별로 그룹핑된 일정 */
 export function getScheduleByDate(date: string): Schedule[] {
@@ -472,18 +472,18 @@ export function getScheduleByDate(date: string): Schedule[] {
 /** 프로그램 기간 내 모든 날짜 목록 */
 export const PROGRAM_DATES = [
   '2026-04-05', // 테스트용 오늘
-  '2025-04-07',
-  '2025-04-08',
-  '2025-04-09',
-  '2025-04-10',
-  '2025-04-11',
-  '2025-04-12',
-  '2025-04-13',
-  '2025-04-14',
-  '2025-04-15',
-  '2025-04-16',
-  '2025-04-17',
-  '2025-04-18',
-  '2025-04-19',
-  '2025-04-20',
+  '2026-04-07',
+  '2026-04-08',
+  '2026-04-09',
+  '2026-04-10',
+  '2026-04-11',
+  '2026-04-12',
+  '2026-04-13',
+  '2026-04-14',
+  '2026-04-15',
+  '2026-04-16',
+  '2026-04-17',
+  '2026-04-18',
+  '2026-04-19',
+  '2026-04-20',
 ];

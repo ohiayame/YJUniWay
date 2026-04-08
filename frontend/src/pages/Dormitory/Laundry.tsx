@@ -115,7 +115,7 @@ const LaundryPage = () => {
             <SmartphoneIcon sx={{ fontSize: 22, color: 'white' }} />
             <div>
               <div style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>
-                {isKo ? '메타클럽' : 'メタクラブ'}
+                {isKo ? '메타클럽 가입' : 'メタクラブ 登録'}
               </div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>metaclub.im</div>
             </div>
