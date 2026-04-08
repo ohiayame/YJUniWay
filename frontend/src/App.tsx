@@ -9,6 +9,8 @@ import LaundryPage from './pages/Dormitory/Laundry';
 import SchedulePage from './pages/Schedule';
 import StudentListPage from './pages/StudentList';
 import AdminPage from './pages/Admin';
+import AdminSignupPage from './pages/Admin/Signup';
+import AdminListPage from './pages/Admin/Admins';
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/students" element={<StudentListPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/signup" element={<AdminSignupPage />} />
+          <Route path="/admin/admins" element={<AdminListPage />} />
         </Routes>
       </BrowserRouter>
     </Provider>

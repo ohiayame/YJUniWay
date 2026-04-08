@@ -17,6 +17,7 @@ CREATE TABLE admins (
   student_id   VARCHAR(20)           UNIQUE COMMENT '학번',
   phone        VARCHAR(20)  NOT NULL COMMENT '전화번호',
   role         ENUM('professor', 'staff') NOT NULL DEFAULT 'staff' COMMENT '교수 / 학생(조교)',
+  is_approved  TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '교수 승인 여부 (professor는 항상 1)',
   password     VARCHAR(255) NOT NULL COMMENT '해시된 비밀번호',
   created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at   DATETIME              DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
