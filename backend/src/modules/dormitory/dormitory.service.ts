@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DormitorySection } from './dormitory-section.entity';
+import { DormitorySection, SectionType } from './dormitory-section.entity';
 import { DormitoryItem } from './dormitory-item.entity';
 
 @Injectable()
@@ -13,8 +13,22 @@ export class DormitoryService {
     private readonly itemRepo: Repository<DormitoryItem>,
   ) {}
 
-  findAllSections(): Promise<DormitorySection[]> {
-    return this.sectionRepo.find({ relations: ['items'] });
+  // dormitory_sections(type=floor) + dormitory_items 조회 → 층별 안내 영역
+  findFloorSections(): Promise<DormitorySection[]> {
+    return this.sectionRepo.find({
+      where: { type: SectionType.FLOOR },
+      relations: ['items'],
+      order: { sortOrder: 'ASC', items: { sortOrder: 'ASC' } },
+    });
+  }
+
+  // dormitory_sections(type=category) + dormitory_items 조회 → 규칙/쓰레기 등 카테고리 영역
+  findCategorySections(): Promise<DormitorySection[]> {
+    return this.sectionRepo.find({
+      where: { type: SectionType.CATEGORY },
+      relations: ['items'],
+      order: { sortOrder: 'ASC', items: { sortOrder: 'ASC' } },
+    });
   }
 
   async findSection(id: number): Promise<DormitorySection> {

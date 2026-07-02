@@ -1,5 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller, Get, Post, Put, Delete,
+  Param, Body, Query,
+  UploadedFile, UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { StudentService } from './student.service';
 import { Student } from './student.entity';
 
@@ -8,6 +13,7 @@ import { Student } from './student.entity';
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
+  // GET /api/student → students 테이블 전체 조회
   @Get()
   @ApiOperation({ summary: '학생 명단 조회' })
   findAll() {
@@ -33,6 +39,15 @@ export class StudentController {
   @ApiOperation({ summary: '학생 삭제' })
   remove(@Param('id') id: string) {
     return this.studentService.remove(+id);
+  }
+
+  @Post('parse-document')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'PDF/이미지에서 학생 명단 추출 (Claude AI)' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 20 * 1024 * 1024 } }))
+  parseDocument(@UploadedFile() file: Express.Multer.File) {
+    return this.studentService.parseDocument(file);
   }
 
   // 점호 --------------------------------------------------

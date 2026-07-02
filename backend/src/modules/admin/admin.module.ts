@@ -10,7 +10,7 @@ import { AdminService } from './admin.service';
     TypeOrmModule.forFeature([Admin]),
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'secret',
-      signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as string },
+      signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as never },
     }),
   ],
   controllers: [AdminController],

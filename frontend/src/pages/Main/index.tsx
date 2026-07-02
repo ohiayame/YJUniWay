@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import InboxIcon from '@mui/icons-material/Inbox';
@@ -11,7 +12,10 @@ import campusMapKR from '../../assets/campus-map_KR.png';
 import campusMapJP from '../../assets/campus-map_JP.png';
 import yjuLogo from '../../assets/yju.png';
 import PageLayout from '../../components/PageLayout';
-import { mockTodaySchedules, mockTomorrowGathering, mockSettings, mockEmergencyContacts } from '../../mock/mainData';
+import { getScheduleByDate } from '../../api/schedule';
+import { getSettings, getContacts } from '../../api/settings';
+import type { Schedule } from '../../api/schedule';
+import type { AppSettings, EmergencyContact } from '../../api/settings';
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <div style={{
@@ -26,9 +30,35 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+// 오늘/내일 날짜를 'YYYY-MM-DD' 형식으로 반환
+const getDateString = (offsetDays: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+};
+
 const MainPage = () => {
   const { i18n } = useTranslation();
   const isKo = i18n.language === 'ko';
+
+  const [todaySchedules, setTodaySchedules] = useState<Schedule[]>([]);
+  const [tomorrowSchedules, setTomorrowSchedules] = useState<Schedule[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+
+  useEffect(() => {
+    const today = getDateString(0);
+    const tomorrow = getDateString(1);
+
+    // 오늘/내일 일정, 앱 설정, 긴급 연락처를 병렬로 조회
+    getScheduleByDate(today).then(setTodaySchedules).catch(() => setTodaySchedules([]));
+    getScheduleByDate(tomorrow).then(setTomorrowSchedules).catch(() => setTomorrowSchedules([]));
+    getSettings().then(setSettings).catch(() => setSettings(null));
+    getContacts().then(setContacts).catch(() => setContacts([]));
+  }, []);
+
+  // 내일 첫 번째 일정을 집합 정보로 사용
+  const tomorrowGathering = tomorrowSchedules[0] ?? null;
 
   return (
     <PageLayout titleKo="YJUniWay" titleJa="YJUniWay">
@@ -42,24 +72,24 @@ const MainPage = () => {
         marginBottom: 10,
       }}>
 
-        {mockTodaySchedules.length === 0 ? (
+        {todaySchedules.length === 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#27ae60', flexShrink: 0 }} />
             <span style={{ fontSize: 14, color: 'white' }}>
               {isKo ? '자유 탐방' : '自由探索'}
             </span>
           </div>
-        ) : mockTodaySchedules.length === 1 ? (
+        ) : todaySchedules.length === 1 ? (
           /* 일정 1개 — 크게 표시 */
           <>
             <div style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>
-              {isKo ? mockTodaySchedules[0].title_ko : mockTodaySchedules[0].title_ja}
+              {isKo ? todaySchedules[0].titleKo : todaySchedules[0].titleJa}
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
-              {mockTodaySchedules[0].time_start}
-              {mockTodaySchedules[0].time_end ? ` – ${mockTodaySchedules[0].time_end}` : ''}
+              {todaySchedules[0].timeStart}
+              {todaySchedules[0].timeEnd ? ` – ${todaySchedules[0].timeEnd}` : ''}
               {' · '}
-              {isKo ? mockTodaySchedules[0].location_ko : mockTodaySchedules[0].location_ja}
+              {isKo ? todaySchedules[0].locationKo : todaySchedules[0].locationJa}
             </div>
           </>
         ) : (
@@ -71,24 +101,24 @@ const MainPage = () => {
               overflowY: 'auto',
               scrollbarWidth: 'thin' as const,
             }}>
-              {mockTodaySchedules.map((s, i) => (
+              {todaySchedules.map((s, i) => (
                 <div key={s.id} style={{
                   display: 'flex',
                   gap: 10,
                   alignItems: 'flex-start',
                   padding: '8px 0',
-                  borderBottom: i < mockTodaySchedules.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                  borderBottom: i < todaySchedules.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none',
                 }}>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', minWidth: 44, paddingTop: 2 }}>
-                    {s.time_start ?? ''}
+                    {s.timeStart ?? ''}
                   </div>
                   <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(255,255,255,0.4)', flexShrink: 0, marginTop: 4 }} />
                   <div>
                     <div style={{ fontSize: 13, color: 'white', fontWeight: 500, lineHeight: 1.4 }}>
-                      {isKo ? s.title_ko : s.title_ja}
+                      {isKo ? s.titleKo : s.titleJa}
                     </div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
-                      {isKo ? s.location_ko : s.location_ja}
+                      {isKo ? s.locationKo : s.locationJa}
                     </div>
                   </div>
                 </div>
@@ -103,7 +133,7 @@ const MainPage = () => {
 
       {/* 내일 집합 */}
       <SectionLabel>{isKo ? '내일 집합' : '明日の集合'}</SectionLabel>
-      {mockTomorrowGathering ? (
+      {tomorrowGathering ? (
         <div style={{
           background: '#FFF5EC',
           borderRadius: 14,
@@ -116,10 +146,10 @@ const MainPage = () => {
           <LocationOnIcon sx={{ fontSize: 28, color: '#f39c12' }} />
           <div>
             <div style={{ fontSize: 15, fontWeight: 'bold', color: '#111' }}>
-              {isKo ? mockTomorrowGathering.location_ko : mockTomorrowGathering.location_ja}
+              {isKo ? tomorrowGathering.locationKo : tomorrowGathering.locationJa}
             </div>
             <div style={{ fontSize: 13, color: '#aaa', marginTop: 2 }}>
-              {mockTomorrowGathering.time} {isKo ? '집합' : '集合'}
+              {tomorrowGathering.timeStart} {isKo ? '집합' : '集合'}
             </div>
           </div>
         </div>
@@ -141,7 +171,7 @@ const MainPage = () => {
       )}
 
       {/* 공지 */}
-      {(isKo ? mockSettings.notice_ko : mockSettings.notice_ja) && (
+      {settings && (isKo ? settings.noticeKo : settings.noticeJa) && (
         <div style={{
           background: '#fffbe6',
           borderLeft: '3px solid #f39c12',
@@ -153,7 +183,7 @@ const MainPage = () => {
           marginBottom: 10,
         }}>
           <WarningAmberIcon sx={{ fontSize: 14, color: '#f39c12', verticalAlign: 'middle', mr: 0.5 }} />
-          {isKo ? mockSettings.notice_ko : mockSettings.notice_ja}
+          {isKo ? settings.noticeKo : settings.noticeJa}
         </div>
       )}
 
@@ -166,7 +196,7 @@ const MainPage = () => {
         }}>
           <AssignmentIcon sx={{ fontSize: 20, color: '#555' }} />
           <div style={{ fontSize: 14, fontWeight: 'bold', marginTop: 4 }}>
-            {mockSettings.curfew_time ?? (isKo ? '미정' : '未定')}
+            {settings?.curfewTime ?? (isKo ? '미정' : '未定')}
           </div>
           <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>
             {isKo ? '통금/점호' : '門限/点呼'}
@@ -199,12 +229,12 @@ const MainPage = () => {
       }}>
         <WifiIcon sx={{ fontSize: 22, color: '#555' }} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 'bold', color: '#111' }}>{isKo ? '생활관' : '生活館'} WIFI : {mockSettings.wifi_ssid}</div>
-          <div style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>password : {mockSettings.wifi_password}</div>
+          <div style={{ fontSize: 13, fontWeight: 'bold', color: '#111' }}>{isKo ? '생활관' : '生活館'} WIFI : {settings?.wifiSsid}</div>
+          <div style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>password : {settings?.wifiPassword}</div>
         </div>
         <button
           className="copy-btn"
-          onClick={() => navigator.clipboard.writeText(mockSettings.wifi_password ?? '')}
+          onClick={() => navigator.clipboard.writeText(settings?.wifiPassword ?? '')}
         >
           {isKo ? '복사' : 'コピー'}
         </button>
@@ -250,7 +280,7 @@ const MainPage = () => {
             {isKo ? '영진전문대학교' : '永進専門大学校'}
           </div>
           <div style={{ fontSize: 12, color: '#888', marginTop: 3 }}>
-            {isKo ? mockSettings.school_address_ko : mockSettings.school_address_ja}
+            {isKo ? settings?.schoolAddressKo : settings?.schoolAddressJa}
           </div>
         </div>
       </div>
@@ -263,17 +293,17 @@ const MainPage = () => {
         borderRadius: 14,
         padding: '4px 14px',
       }}>
-        {mockEmergencyContacts.map((contact, i) => (
+        {contacts.map((contact, i) => (
           <div key={contact.id} style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '9px 0',
-            borderBottom: i < mockEmergencyContacts.length - 1 ? '1px solid #f5f5f5' : 'none',
+            borderBottom: i < contacts.length - 1 ? '1px solid #f5f5f5' : 'none',
           }}>
             <div>
               <div style={{ fontSize: 12, color: '#999' }}>
-                {isKo ? contact.label_ko : contact.label_ja}
+                {isKo ? contact.labelKo : contact.labelJa}
               </div>
               <div style={{ fontSize: 13, fontWeight: 'bold', color: '#1a1a2e', marginTop: 1 }}>
                 {contact.phone}

@@ -1,5 +1,6 @@
 import type { Schedule } from '../types';
 
+// 프로그램 기간 동안의 전체 일정
 export const mockSchedules: Schedule[] = [
   // ── 4월 7일 (월) 입국 · 오리엔테이션 ──
   {

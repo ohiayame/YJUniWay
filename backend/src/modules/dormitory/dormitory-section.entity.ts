@@ -28,14 +28,14 @@ export class DormitorySection {
   @Column({ name: 'title_ja', length: 100 })
   titleJa: string;
 
-  @Column({ name: 'subtitle_ko', length: 100, nullable: true })
+  @Column({ name: 'subtitle_ko', type: 'varchar', length: 100, nullable: true })
   subtitleKo: string | null;
 
-  @Column({ name: 'subtitle_ja', length: 100, nullable: true })
+  @Column({ name: 'subtitle_ja', type: 'varchar', length: 100, nullable: true })
   subtitleJa: string | null;
 
-  @Column({ length: 10, nullable: true })
-  icon: string | null;
+  @Column({ name: 'sort_order', default: 0 })
+  sortOrder: number;
 
   @OneToMany(() => DormitoryItem, (item) => item.section, {
     cascade: true,

@@ -13,6 +13,7 @@ export class SettingsService {
     private readonly contactRepo: Repository<EmergencyContact>,
   ) {}
 
+  // app_settings 테이블에서 id=1 단일 행 조회 (없으면 빈 행 생성)
   async getSettings(): Promise<AppSettings> {
     let settings = await this.settingsRepo.findOne({ where: { id: 1 } });
     if (!settings) {
@@ -29,6 +30,7 @@ export class SettingsService {
 
   // 긴급 연락처 ------------------------------------------
 
+  // emergency_contacts 테이블 전체 조회
   findAllContacts(): Promise<EmergencyContact[]> {
     return this.contactRepo.find();
   }

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
@@ -12,27 +13,25 @@ import WomanIcon from '@mui/icons-material/Woman';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import BottomTab from '../../components/BottomTab';
+import { getLaundrySettings, getLaundrySteps } from '../../api/laundry';
+import type { LaundrySettings, LaundryStep } from '../../api/laundry';
 
-const STEPS_KO = [
-  '앱 「메타클럽」 다운로드',
-  '현금으로 충전 (편의점 · 프런트)',
-  '세탁기 QR코드 스캔',
-  '코스 선택 후 앱으로 결제',
-  '세탁 완료 후 바로 꺼내기',
-];
-const STEPS_JA = [
-  'アプリ「メタクラブ」をダウンロード',
-  '現金でチャージ（コンビニ・フロント）',
-  '洗濯機のQRコードをスキャン',
-  'コースを選択してアプリで決済',
-  '洗濯終了後は速やかに取り出す',
-];
+// 백엔드가 /uploads/... 경로로 미디어 파일을 서빙하므로 API base에서 /api를 제거해 사용
+const MEDIA_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api', '') ?? 'http://localhost:3000';
 
 const LaundryPage = () => {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
   const isKo = i18n.language === 'ko';
-  const steps = isKo ? STEPS_KO : STEPS_JA;
+
+  const [settings, setSettings] = useState<LaundrySettings | null>(null);
+  const [steps, setSteps] = useState<LaundryStep[]>([]);
+
+  useEffect(() => {
+    // 세탁기 설정과 사용 순서를 병렬로 조회
+    getLaundrySettings().then(setSettings).catch(() => setSettings(null));
+    getLaundrySteps().then(setSteps).catch(() => setSteps([]));
+  }, []);
 
   return (
     <div style={{ paddingBottom: 64, maxWidth: 480, margin: '0 auto', background: 'white', minHeight: '100vh' }}>
@@ -73,14 +72,18 @@ const LaundryPage = () => {
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>
               {isKo ? '세탁기 1회' : '洗濯機 1回'}
             </div>
-            <div style={{ fontSize: 22, fontWeight: 'bold', color: 'white', marginTop: 4 }}>700원</div>
+            <div style={{ fontSize: 22, fontWeight: 'bold', color: 'white', marginTop: 4 }}>
+              {settings?.washPrice ?? '--'}
+            </div>
           </div>
           <div style={{ flex: 1, background: '#f7f7f7', borderRadius: 14, padding: 14, textAlign: 'center' }}>
             <AirIcon sx={{ fontSize: 22, color: '#888' }} />
             <div style={{ fontSize: 11, color: '#aaa', marginTop: 6 }}>
               {isKo ? '건조기 1회' : '乾燥機 1回'}
             </div>
-            <div style={{ fontSize: 22, fontWeight: 'bold', color: '#111', marginTop: 4 }}>700원~</div>
+            <div style={{ fontSize: 22, fontWeight: 'bold', color: '#111', marginTop: 4 }}>
+              {settings?.dryPrice ?? '--'}
+            </div>
           </div>
         </div>
 
@@ -100,28 +103,32 @@ const LaundryPage = () => {
           </div>
         </div>
 
-        {/* MetaClub 앱 링크 */}
-        <a
-          href="https://www.metaclub.im/"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: '#6c3ce1', borderRadius: 12, padding: '12px 16px',
-            marginBottom: 14, textDecoration: 'none',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <SmartphoneIcon sx={{ fontSize: 22, color: 'white' }} />
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>
-                {isKo ? '메타클럽 가입' : 'メタクラブ 登録'}
+        {/* 결제 앱 링크 */}
+        {settings && (
+          <a
+            href={settings.appUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: '#6c3ce1', borderRadius: 12, padding: '12px 16px',
+              marginBottom: 14, textDecoration: 'none',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <SmartphoneIcon sx={{ fontSize: 22, color: 'white' }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 'bold', color: 'white' }}>
+                  {isKo ? `${settings.appName} 가입` : `${settings.appName} 登録`}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>
+                  {settings.appUrl.replace(/^https?:\/\//, '')}
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>metaclub.im</div>
             </div>
-          </div>
-          <ArrowForwardIosIcon sx={{ fontSize: 14, color: 'white' }} />
-        </a>
+            <ArrowForwardIosIcon sx={{ fontSize: 14, color: 'white' }} />
+          </a>
+        )}
 
         {/* 위치 */}
         <div style={{ fontSize: 11, fontWeight: 'bold', color: '#bbb', letterSpacing: 1, marginBottom: 10 }}>
@@ -149,33 +156,50 @@ const LaundryPage = () => {
           {isKo ? '앱 사용법' : 'アプリの使い方'}
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-          <div style={{
-            background: '#111', borderRadius: 14, width: '55%', aspectRatio: '9/16',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}>
+          {settings?.videoUrl ? (
+            <video
+              src={`${MEDIA_BASE}${settings.videoUrl}`}
+              controls
+              style={{ width: '55%', borderRadius: 14 }}
+            />
+          ) : (
             <div style={{
-              width: 44, height: 44, background: 'rgba(255,255,255,0.15)',
-              borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: '#111', borderRadius: 14, width: '55%', aspectRatio: '9/16',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
-              <PlayArrowIcon sx={{ fontSize: 22, color: 'white', ml: '2px' }} />
+              <div style={{
+                width: 44, height: 44, background: 'rgba(255,255,255,0.15)',
+                borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <PlayArrowIcon sx={{ fontSize: 22, color: 'white', ml: '2px' }} />
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                {isKo ? '영상 준비 중' : '動画準備中'}
+              </div>
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-              {isKo ? '영상 재생' : '動画を再生'}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* 세제 넣는 곳 */}
         <div style={{ fontSize: 11, fontWeight: 'bold', color: '#bbb', letterSpacing: 1, marginBottom: 10 }}>
           {isKo ? '세제 넣는 곳' : '洗剤の入れ方'}
         </div>
-        <div style={{
-          background: '#f5f5f5', borderRadius: 14, aspectRatio: '4/3',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          gap: 8, marginBottom: 14,
-        }}>
-          <ImageIcon sx={{ fontSize: 36, color: '#bbb' }} />
-          <div style={{ fontSize: 12, color: '#bbb' }}>{isKo ? '이미지 준비 중' : '画像準備中'}</div>
+        <div style={{ borderRadius: 14, overflow: 'hidden', marginBottom: 14 }}>
+          {settings?.imageUrl ? (
+            <img
+              src={`${MEDIA_BASE}${settings.imageUrl}`}
+              alt={isKo ? '세제 넣는 곳' : '洗剤の入れ方'}
+              style={{ width: '100%', display: 'block' }}
+            />
+          ) : (
+            <div style={{
+              background: '#f5f5f5', borderRadius: 14, aspectRatio: '4/3',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <ImageIcon sx={{ fontSize: 36, color: '#bbb' }} />
+              <div style={{ fontSize: 12, color: '#bbb' }}>{isKo ? '이미지 준비 중' : '画像準備中'}</div>
+            </div>
+          )}
         </div>
 
         {/* 사용 순서 */}
@@ -184,7 +208,7 @@ const LaundryPage = () => {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
           {steps.map((step, i) => (
-            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div key={step.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <div style={{
                 width: 26, height: 26, borderRadius: '50%',
                 background: '#1a1a2e', color: 'white',
@@ -194,21 +218,23 @@ const LaundryPage = () => {
                 {i + 1}
               </div>
               <div style={{ fontSize: 13, color: '#333', lineHeight: 1.5, paddingTop: 4 }}>
-                {step}
+                {isKo ? step.textKo : step.textJa}
               </div>
             </div>
           ))}
         </div>
 
         {/* 주의사항 */}
-        <div style={{
-          background: '#fffbe6', borderLeft: '3px solid #f39c12',
-          borderRadius: '0 10px 10px 0', padding: '10px 12px',
-          fontSize: 12, color: '#555', lineHeight: 1.6,
-        }}>
-          <WarningAmberIcon sx={{ fontSize: 13, color: '#f39c12', verticalAlign: 'middle', mr: 0.5 }} />
-          {isKo ? '세탁물을 방치하지 말아 주세요.' : '洗濯物の放置はご遠慮ください。'}
-        </div>
+        {settings && (isKo ? settings.warningKo : settings.warningJa) && (
+          <div style={{
+            background: '#fffbe6', borderLeft: '3px solid #f39c12',
+            borderRadius: '0 10px 10px 0', padding: '10px 12px',
+            fontSize: 12, color: '#555', lineHeight: 1.6,
+          }}>
+            <WarningAmberIcon sx={{ fontSize: 13, color: '#f39c12', verticalAlign: 'middle', mr: 0.5 }} />
+            {isKo ? settings.warningKo : settings.warningJa}
+          </div>
+        )}
 
       </main>
 

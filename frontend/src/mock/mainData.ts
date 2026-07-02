@@ -1,5 +1,6 @@
 import type { Schedule, AppSettings, EmergencyContact } from '../types';
 
+// 오늘의 일정 정보 (없을 수도 있음)
 export const mockTodaySchedules: Schedule[] = [
   {
     id: 1,
@@ -42,12 +43,14 @@ export const mockTodaySchedules: Schedule[] = [
   },
 ];
 
+// 내일 모이는 장소 정보 (없을 수도 있음)
 export const mockTomorrowGathering: { time: string; location_ko: string; location_ja: string } | null = {
   time: '09:00',
   location_ko: '정문 앞',
   location_ja: '正門前',
 };
 
+// 와이파이 및 학교 정보
 export const mockSettings: AppSettings = {
   curfew_time: '22:00',
   wifi_ssid: 'YJU_Guest',
@@ -58,6 +61,7 @@ export const mockSettings: AppSettings = {
   notice_ja: '4月10日(木)の韓国語授業は教室変更 — 本館203号室に移動します。',
 };
 
+// 긴급 연락처 정보
 export const mockEmergencyContacts: EmergencyContact[] = [
   { id: 1, label_ko: '담당 교수', label_ja: '担当教員', phone: '010-1234-5678' },
   { id: 2, label_ko: '기숙사 관리실', label_ja: '寮管理室', phone: '053-940-0000' },

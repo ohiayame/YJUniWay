@@ -9,6 +9,7 @@ import { EmergencyContact } from './emergency-contact.entity';
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
+  // GET /api/settings → app_settings 테이블 단일 행 조회 (통금시간, WiFi, 주소, 공지)
   @Get()
   @ApiOperation({ summary: '앱 설정 조회' })
   getSettings() {
@@ -24,6 +25,7 @@ export class SettingsController {
 
   // 긴급 연락처 ------------------------------------------
 
+  // GET /api/settings/contacts → emergency_contacts 테이블 전체 조회
   @Get('contacts')
   @ApiOperation({ summary: '긴급 연락처 목록 조회' })
   findAllContacts() {

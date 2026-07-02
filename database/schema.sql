@@ -125,6 +125,35 @@ CREATE TABLE emergency_contacts (
 );
 
 -- ---------------------------------------------
+-- 세탁기 설정 (요금, 앱 정보 — 싱글턴)
+-- ---------------------------------------------
+CREATE TABLE laundry_settings (
+  id           INT          NOT NULL DEFAULT 1,
+  wash_price   VARCHAR(30)  NOT NULL DEFAULT '700원'                  COMMENT '세탁기 1회 요금',
+  dry_price    VARCHAR(30)  NOT NULL DEFAULT '700원~'                 COMMENT '건조기 1회 요금',
+  app_name     VARCHAR(100) NOT NULL DEFAULT '메타클럽'               COMMENT '결제 앱 이름',
+  app_url      VARCHAR(255) NOT NULL DEFAULT 'https://www.metaclub.im/' COMMENT '결제 앱 URL',
+  warning_ko   TEXT                                                   COMMENT '주의사항 (한국어)',
+  warning_ja   TEXT                                                   COMMENT '주의사항 (일본어)',
+  video_url    VARCHAR(255)                                           COMMENT '앱 사용법 영상 경로 (/uploads/...)',
+  image_url    VARCHAR(255)                                           COMMENT '세제 이미지 경로 (/uploads/...)',
+  updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT chk_laundry_single_row CHECK (id = 1)
+);
+
+-- ---------------------------------------------
+-- 세탁기 사용 순서
+-- ---------------------------------------------
+CREATE TABLE laundry_steps (
+  id         INT          NOT NULL AUTO_INCREMENT,
+  sort_order INT          NOT NULL COMMENT '표시 순서',
+  text_ko    VARCHAR(255) NOT NULL COMMENT '단계 내용 (한국어)',
+  text_ja    VARCHAR(255) NOT NULL COMMENT '단계 내용 (일본어)',
+  PRIMARY KEY (id)
+);
+
+-- ---------------------------------------------
 -- 점호 (매일 초기화)
 -- ---------------------------------------------
 CREATE TABLE roll_calls (

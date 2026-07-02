@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PageLayout from '../../components/PageLayout';
-import { getScheduleByDate, FREE_DAYS, PROGRAM_DATES } from '../../mock/scheduleData';
+import { getSchedules } from '../../api/schedule';
+import type { Schedule } from '../../api/schedule';
 
 const DAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
 const DAY_JA = ['日', '月', '火', '水', '木', '金', '土'];
@@ -11,35 +12,52 @@ const DOT_COLORS = ['#1a1a2e', '#f39c12', '#27ae60', '#8e44ad', '#2980b9'];
 const ROLLCALL_COLOR = '#e74c3c';
 
 const TODAY = new Date().toISOString().slice(0, 10);
-const initialDate = PROGRAM_DATES.includes(TODAY) ? TODAY : PROGRAM_DATES[0];
+
+// 점호 여부 판단 (titleJa 기준)
+const isRollCallItem = (s: Schedule) => s.titleJa === '点呼' || s.titleKo === '점호';
 
 const SchedulePage = () => {
   const { i18n } = useTranslation();
   const isKo = i18n.language === 'ko';
 
-  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [allSchedules, setAllSchedules] = useState<Schedule[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>(TODAY);
   const stripRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
-    const btn = btnRefs.current[initialDate];
-    const strip = stripRef.current;
-    if (!btn || !strip) return;
-    strip.scrollLeft = btn.offsetLeft - strip.offsetWidth / 2 + btn.offsetWidth / 2;
+    // 전체 일정을 한 번 로드하여 날짜 스트립과 타임라인 모두에 사용
+    getSchedules()
+      .then((data) => {
+        setAllSchedules(data);
+        // 오늘 날짜가 프로그램 기간에 없으면 첫 번째 날짜로 초기화
+        const dates = [...new Set(data.map((s) => s.date))].sort();
+        if (dates.length > 0 && !dates.includes(TODAY)) {
+          setSelectedDate(dates[0]);
+        }
+      })
+      .catch(() => setAllSchedules([]));
   }, []);
 
-  const schedules    = getScheduleByDate(selectedDate);
-  const isFreeDay    = FREE_DAYS.has(selectedDate);
-  const mainCount    = schedules.filter(
-    (s) => s.title_ko !== '점호' && s.title_ja !== '点呼',
-  ).length;
-  const rollCall     = schedules.find(
-    (s) => s.title_ko === '점호' || s.title_ja === '点呼',
-  );
-  const timelineItems = isFreeDay
-    ? rollCall ? [rollCall] : []
-    : schedules;
+  // 전체 일정에서 고유 날짜 목록 추출 (오름차순)
+  const programDates = [...new Set(allSchedules.map((s) => s.date))].sort();
 
+  // 점호만 있는 날 = 자유 탐방일
+  const freeDays = new Set(
+    programDates.filter((date) => {
+      const daySchedules = allSchedules.filter((s) => s.date === date);
+      return daySchedules.length > 0 && daySchedules.every(isRollCallItem);
+    }),
+  );
+
+  // 선택된 날짜의 일정
+  const schedules = allSchedules.filter((s) => s.date === selectedDate);
+  const isFreeDay = freeDays.has(selectedDate);
+  const mainCount = schedules.filter((s) => !isRollCallItem(s)).length;
+  const rollCall = schedules.find(isRollCallItem);
+  const timelineItems = isFreeDay ? (rollCall ? [rollCall] : []) : schedules;
+
+  // 날짜 선택 시 버튼이 스트립 가운데로 오도록 스크롤
   const handleSelect = (date: string) => {
     setSelectedDate(date);
     const btn = btnRefs.current[date];
@@ -48,8 +66,17 @@ const SchedulePage = () => {
     strip.scrollTo({ left: btn.offsetLeft - strip.offsetWidth / 2 + btn.offsetWidth / 2, behavior: 'smooth' });
   };
 
+  // 초기 로드 후 선택 날짜 버튼으로 스크롤
+  useEffect(() => {
+    if (programDates.length === 0) return;
+    const btn = btnRefs.current[selectedDate];
+    const strip = stripRef.current;
+    if (!btn || !strip) return;
+    strip.scrollLeft = btn.offsetLeft - strip.offsetWidth / 2 + btn.offsetWidth / 2;
+  }, [programDates.length, selectedDate]);
+
   const formatLabel = (dateStr: string) => {
-    const d   = new Date(dateStr);
+    const d = new Date(dateStr);
     const day = isKo ? DAY_KO[d.getDay()] : DAY_JA[d.getDay()];
     return isKo
       ? `${d.getMonth() + 1}월 ${d.getDate()}일 (${day})`
@@ -65,23 +92,23 @@ const SchedulePage = () => {
         className="date-strip"
         style={{ display: 'flex', gap: 4, marginBottom: 14, overflowX: 'auto' }}
       >
-        {PROGRAM_DATES.map((date) => {
-          const d        = new Date(date);
-          const dow      = d.getDay();
+        {programDates.map((date) => {
+          const d = new Date(date);
+          const dow = d.getDay();
           const isActive = date === selectedDate;
-          const isToday  = date === TODAY;
-          const isFree   = FREE_DAYS.has(date);
-          const hasEvent = getScheduleByDate(date).some(
-            (s) => s.title_ko !== '점호' && s.title_ja !== '点呼',
-          );
+          const isToday = date === TODAY;
+          const isFree = freeDays.has(date);
+          const hasEvent = allSchedules
+            .filter((s) => s.date === date)
+            .some((s) => !isRollCallItem(s));
 
           const weekendColor = dow === 6 ? '#4a90d9' : dow === 0 ? '#e74c3c' : null;
-          const dayName      = isKo ? DAY_KO[dow] : DAY_JA[dow];
+          const dayName = isKo ? DAY_KO[dow] : DAY_JA[dow];
 
-          const bg        = isActive ? '#1a1a2e' : isToday ? '#fff8e1' : 'transparent';
+          const bg = isActive ? '#1a1a2e' : isToday ? '#fff8e1' : 'transparent';
           const nameColor = isActive ? 'rgba(255,255,255,0.55)' : (weekendColor ?? '#bbb');
-          const numColor  = isActive ? 'white' : isToday ? '#f39c12' : (weekendColor ?? '#333');
-          const dotBg     = isActive ? '#f39c12' : isFree ? '#27ae60' : hasEvent ? '#1a1a2e' : 'transparent';
+          const numColor = isActive ? 'white' : isToday ? '#f39c12' : (weekendColor ?? '#333');
+          const dotBg = isActive ? '#f39c12' : isFree ? '#27ae60' : hasEvent ? '#1a1a2e' : 'transparent';
 
           return (
             <button
@@ -106,26 +133,28 @@ const SchedulePage = () => {
       <div>
 
         {/* ── 날짜 레이블 ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 15, fontWeight: 'bold', color: '#111' }}>
-            {formatLabel(selectedDate)}
-          </span>
-          {isFreeDay ? (
-            <span style={{
-              fontSize: 11, background: '#e8f5e9', color: '#2e7d32',
-              borderRadius: 20, padding: '2px 8px', fontWeight: 500,
-            }}>
-              {isKo ? '자유 탐방' : '自由散策'}
+        {selectedDate && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <span style={{ fontSize: 15, fontWeight: 'bold', color: '#111' }}>
+              {formatLabel(selectedDate)}
             </span>
-          ) : mainCount > 0 && (
-            <span style={{
-              fontSize: 11, background: '#f0f0f0', color: '#888',
-              borderRadius: 20, padding: '2px 8px',
-            }}>
-              {isKo ? `${mainCount}건` : `${mainCount}件`}
-            </span>
-          )}
-        </div>
+            {isFreeDay ? (
+              <span style={{
+                fontSize: 11, background: '#e8f5e9', color: '#2e7d32',
+                borderRadius: 20, padding: '2px 8px', fontWeight: 500,
+              }}>
+                {isKo ? '자유 탐방' : '自由散策'}
+              </span>
+            ) : mainCount > 0 && (
+              <span style={{
+                fontSize: 11, background: '#f0f0f0', color: '#888',
+                borderRadius: 20, padding: '2px 8px',
+              }}>
+                {isKo ? `${mainCount}건` : `${mainCount}件`}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* ── 자유 탐방 카드 ── */}
         {isFreeDay && (
@@ -152,9 +181,9 @@ const SchedulePage = () => {
         {timelineItems.length > 0 ? (
           <div>
             {timelineItems.map((item, i) => {
-              const isLast     = i === timelineItems.length - 1;
-              const isRollCall = item.title_ko === '점호' || item.title_ja === '点呼';
-              const dotColor   = isRollCall ? ROLLCALL_COLOR : DOT_COLORS[i % DOT_COLORS.length];
+              const isLast = i === timelineItems.length - 1;
+              const isRC = isRollCallItem(item);
+              const dotColor = isRC ? ROLLCALL_COLOR : DOT_COLORS[i % DOT_COLORS.length];
 
               return (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'stretch' }}>
@@ -166,8 +195,8 @@ const SchedulePage = () => {
                     paddingRight: 12, paddingTop: 3,
                   }}>
                     <span style={{ fontSize: 11, color: '#999', textAlign: 'right', lineHeight: 1.5 }}>
-                      {item.time_start ?? ''}
-                      {item.time_end && <><br />{item.time_end}</>}
+                      {item.timeStart ?? ''}
+                      {item.timeEnd && <><br />{item.timeEnd}</>}
                     </span>
                   </div>
 
@@ -187,16 +216,16 @@ const SchedulePage = () => {
                   <div style={{ flex: 1, paddingLeft: 12, paddingBottom: isLast ? 4 : 20 }}>
                     <div style={{
                       fontSize: 14, fontWeight: 500, lineHeight: 1.4, textAlign: 'center',
-                      color: isRollCall ? ROLLCALL_COLOR : '#111',
+                      color: isRC ? ROLLCALL_COLOR : '#111',
                     }}>
-                      {isKo ? item.title_ko : item.title_ja}
+                      {isKo ? item.titleKo : item.titleJa}
                     </div>
                     <div style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2,
                       fontSize: 12, color: '#bbb', marginTop: 3,
                     }}>
                       <LocationOnIcon sx={{ fontSize: 13, color: '#ccc' }} />
-                      {isKo ? item.location_ko : (item.location_ja ?? item.location_ko)}
+                      {isKo ? item.locationKo : (item.locationJa ?? item.locationKo)}
                     </div>
                   </div>
 

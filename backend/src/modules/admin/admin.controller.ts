@@ -14,6 +14,7 @@ export class AdminController {
     return this.adminService.login(body.studentId, body.password);
   }
 
+  // GET /api/admin → admins 테이블 전체 조회 (password 제외)
   @Get()
   @ApiBearerAuth()
   @ApiOperation({ summary: '관리자 목록 조회' })

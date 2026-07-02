@@ -21,16 +21,16 @@ export class Student {
   @Column({ name: 'name_ja', length: 100 })
   nameJa: string;
 
-  @Column({ name: 'name_ko', length: 100, nullable: true })
+  @Column({ name: 'name_ko', type: 'varchar', length: 100, nullable: true })
   nameKo: string | null;
 
-  @Column({ name: 'name_en', length: 100, nullable: true })
+  @Column({ name: 'name_en', type: 'varchar', length: 100, nullable: true })
   nameEn: string | null;
 
   @Column({ type: 'enum', enum: Gender })
   gender: Gender;
 
-  @Column({ name: 'room_number', length: 20, nullable: true })
+  @Column({ name: 'room_number', type: 'varchar', length: 20, nullable: true })
   roomNumber: string | null;
 
   @Column({ type: 'text', nullable: true })

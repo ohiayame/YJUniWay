@@ -1,8 +1,7 @@
 import type React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
+import { useAppSelector } from '../store';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import BottomTab from './BottomTab';
 
@@ -21,7 +20,7 @@ const PageLayout = ({ titleKo, titleJa, children }: PageLayoutProps) => {
   const { i18n } = useTranslation();
   const isKo = i18n.language === 'ko';
   const navigate = useNavigate();
-  const role = useSelector((state: RootState) => state.auth.role);
+  const role = useAppSelector((state) => state.auth.role);
 
   return (
     <div style={{ paddingBottom: 64, maxWidth: 480, margin: '0 auto', background: 'white', minHeight: '100vh' }}>

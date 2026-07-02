@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '../../store';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -9,30 +9,19 @@ import CloseIcon from '@mui/icons-material/Close';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PageLayout from '../../components/PageLayout';
-import { mockStudents } from '../../mock/studentData';
-import type { RootState } from '../../store';
-import type { Student } from '../../types';
-import { studentService } from '../../services/student.service';
+import { getStudents, createStudent, updateStudent, removeStudent, parseStudentDocument } from '../../api/student';
+import type { Student, ParsedStudent } from '../../api/student';
 
 type SortKey = 'id' | 'room';
-
-const EMPTY_FORM: Omit<Student, 'id'> = {
-  nameJa: '',
-  nameKo: '',
-  nameEn: '',
-  gender: 'M',
-  roomNumber: '',
-  notes: '',
-};
 
 // ─── 메인 페이지 ────────────────────────────────────────────────────────────────
 
 const StudentListPage = () => {
   const { i18n } = useTranslation();
   const isKo = i18n.language === 'ko';
-  const { isAdmin } = useSelector((state: RootState) => state.auth);
+  const { isAdmin } = useAppSelector((state) => state.auth);
 
-  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const [students, setStudents] = useState<Student[]>([]);
   const [sort, setSort] = useState<SortKey>('id');
   const [expanded, setExpanded] = useState<number | null>(null);
 
@@ -42,11 +31,8 @@ const StudentListPage = () => {
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [showImport, setShowImport] = useState(false);
 
-  // 백엔드 연결 시도 (실패하면 mock 유지)
   useEffect(() => {
-    studentService.getAll()
-      .then(res => setStudents(res.data))
-      .catch(() => {}); // 백엔드 미실행 시 mock 데이터 유지
+    getStudents().then(setStudents).catch(() => setStudents([]));
   }, []);
 
   const sorted = [...students].sort((a, b) =>
@@ -60,22 +46,14 @@ const StudentListPage = () => {
   const handleSave = async (form: Omit<Student, 'id'>) => {
     try {
       if (editTarget) {
-        const res = await studentService.update(editTarget.id, form);
-        setStudents(prev => prev.map(s => s.id === editTarget.id ? res.data : s));
+        const updated = await updateStudent(editTarget.id, form);
+        setStudents(prev => prev.map(s => s.id === editTarget.id ? updated : s));
       } else {
-        const res = await studentService.create(form);
-        setStudents(prev => [...prev, res.data]);
+        const created = await createStudent(form);
+        setStudents(prev => [...prev, created]);
       }
     } catch {
-      // 백엔드 미연결 시 로컬 상태만 업데이트
-      if (editTarget) {
-        setStudents(prev => prev.map(s =>
-          s.id === editTarget.id ? { ...s, ...form } : s,
-        ));
-      } else {
-        const newId = Math.max(0, ...students.map(s => s.id)) + 1;
-        setStudents(prev => [...prev, { id: newId, ...form }]);
-      }
+      // API 오류 시 상태 변경 없이 모달만 닫음
     }
     setShowForm(false);
     setEditTarget(null);
@@ -83,21 +61,22 @@ const StudentListPage = () => {
 
   const handleDelete = async (student: Student) => {
     try {
-      await studentService.remove(student.id);
-    } catch {}
-    setStudents(prev => prev.filter(s => s.id !== student.id));
+      await removeStudent(student.id);
+      setStudents(prev => prev.filter(s => s.id !== student.id));
+    } catch {
+      // API 오류 시 목록 유지
+    }
     setDeleteTarget(null);
   };
 
-  const handleImportConfirm = async (parsed: Omit<Student, 'id'>[]) => {
+  const handleImportConfirm = async (parsed: ParsedStudent[]) => {
     const added: Student[] = [];
     for (const item of parsed) {
       try {
-        const res = await studentService.create(item);
-        added.push(res.data);
+        const created = await createStudent(item);
+        added.push(created);
       } catch {
-        const newId = Math.max(0, ...students.map(s => s.id), ...added.map(s => s.id)) + 1;
-        added.push({ id: newId, ...item });
+        // 개별 항목 등록 실패 시 건너뜀
       }
     }
     setStudents(prev => [...prev, ...added]);
@@ -318,6 +297,7 @@ const StudentFormModal = ({
   const hasNonJaChars = (v: string) => /[^\u3040-\u30FF\u4E00-\u9FFF\u3400-\u4DBF\u3000\s]/.test(v);
   const hasKo = (v: string) => /[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/.test(v);
   const hasNonKoChars = (v: string) => /[^\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F\s]/.test(v);
+  // eslint-disable-next-line no-control-regex
   const hasNonEn = (v: string) => /[^\x00-\x7F\s]/.test(v);
 
   const warnJa = form.nameJa.trim().length > 0 && (!hasJa(form.nameJa) || hasNonJaChars(form.nameJa));
@@ -466,12 +446,12 @@ const ImportModal = ({
   isKo, onConfirm, onClose,
 }: {
   isKo: boolean;
-  onConfirm: (students: Omit<Student, 'id'>[]) => void;
+  onConfirm: (students: ParsedStudent[]) => void;
   onClose: () => void;
 }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'preview' | 'error'>('idle');
-  const [parsed, setParsed] = useState<Omit<Student, 'id'>[]>([]);
+  const [parsed, setParsed] = useState<ParsedStudent[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleFile = async (file: File) => {
@@ -479,8 +459,8 @@ const ImportModal = ({
     setErrorMsg('');
 
     try {
-      const res = await studentService.parseDocument(file);
-      setParsed(res.data);
+      const result = await parseStudentDocument(file);
+      setParsed(result);
       setStatus('preview');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

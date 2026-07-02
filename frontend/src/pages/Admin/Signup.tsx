@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { mockAdmins } from '../../mock/adminData';
+import { createAdmin } from '../../api/admin';
+import axios from 'axios';
 
 const AdminSignupPage = () => {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ const AdminSignupPage = () => {
   const [confirming, setConfirming] = useState(false);
   const [done, setDone] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError(null);
@@ -31,19 +34,27 @@ const AdminSignupPage = () => {
       setError('비밀번호가 일치하지 않습니다.');
       return;
     }
-    const duplicate = mockAdmins.find(a => a.student_id === studentId);
-    if (duplicate) {
-      setError('이미 등록된 학번입니다.');
-      return;
-    }
 
     setConfirming(true);
   };
 
-  const handleConfirm = () => {
-    // TODO: 백엔드 연동 시 API 호출로 교체
-    setConfirming(false);
-    setDone(true);
+  const handleConfirm = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await createAdmin({ name, studentId, phone, role: 'staff', isApproved: false, password });
+      setConfirming(false);
+      setDone(true);
+    } catch (err) {
+      setConfirming(false);
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message ?? '가입 신청에 실패했습니다.');
+      } else {
+        setError('가입 신청에 실패했습니다.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,13 +108,15 @@ const AdminSignupPage = () => {
               </button>
               <button
                 onClick={handleConfirm}
+                disabled={loading}
                 style={{
                   flex: 1, padding: 12, borderRadius: 12,
-                  border: 'none', background: '#1a1a2e',
-                  fontSize: 13, color: 'white', fontWeight: 'bold', cursor: 'pointer',
+                  border: 'none', background: loading ? '#888' : '#1a1a2e',
+                  fontSize: 13, color: 'white', fontWeight: 'bold',
+                  cursor: loading ? 'default' : 'pointer',
                 }}
               >
-                신청하기
+                {loading ? '신청 중...' : '신청하기'}
               </button>
             </div>
           </div>

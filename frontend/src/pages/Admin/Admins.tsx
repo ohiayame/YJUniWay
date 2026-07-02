@@ -1,20 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store';
+import { useAppSelector } from '../../store';
 import SchoolIcon from '@mui/icons-material/School';
 import PersonIcon from '@mui/icons-material/Person';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import type { Admin } from '../../types';
-import { mockAdmins } from '../../mock/adminData';
+import { getAdmins, updateAdmin } from '../../api/admin';
+import type { Admin } from '../../api/admin';
 
 const AdminListPage = () => {
   const navigate = useNavigate();
-  const { isAdmin, role } = useSelector((state: RootState) => state.auth);
-  const [admins, setAdmins] = useState<Admin[]>(mockAdmins);
+  const { isAdmin, role } = useAppSelector((state) => state.auth);
+  const [admins, setAdmins] = useState<Admin[]>([]);
   const [pendingId, setPendingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    getAdmins().then(setAdmins).catch(() => setAdmins([]));
+  }, []);
 
   // 교수 미인증 시 차단
   if (!isAdmin || role !== 'professor') {
@@ -45,10 +48,15 @@ const AdminListPage = () => {
     );
   }
 
-  const toggleApproval = (id: number) => {
-    setAdmins(prev => prev.map(a =>
-      a.id === id ? { ...a, is_approved: !a.is_approved } : a
-    ));
+  const toggleApproval = async (id: number) => {
+    const target = admins.find(a => a.id === id);
+    if (!target) return;
+    try {
+      const updated = await updateAdmin(id, { isApproved: !target.isApproved });
+      setAdmins(prev => prev.map(a => a.id === id ? updated : a));
+    } catch {
+      // API 오류 시 상태 유지
+    }
   };
 
   const professors = admins.filter(a => a.role === 'professor');
@@ -113,7 +121,7 @@ const AdminListPage = () => {
     {/* 승인 상태 변경 확인 모달 */}
     {pendingId !== null && (() => {
       const target = admins.find(a => a.id === pendingId)!;
-      const nextApproved = !target.is_approved;
+      const nextApproved = !target.isApproved;
       return (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
@@ -198,7 +206,7 @@ const AdminRow = ({ admin, isLast, onToggle }: {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 'bold', color: '#111' }}>{admin.name}</div>
         <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
-          {admin.student_id ? `학번: ${admin.student_id}` : '교수'}
+          {admin.studentId ? `학번: ${admin.studentId}` : '교수'}
           {' · '}{admin.phone}
         </div>
       </div>
@@ -210,19 +218,19 @@ const AdminRow = ({ admin, isLast, onToggle }: {
           style={{
             display: 'flex', alignItems: 'center', gap: 4,
             padding: '5px 10px', borderRadius: 20, border: 'none',
-            background: admin.is_approved ? '#e8f5e9' : '#fce4ec',
+            background: admin.isApproved ? '#e8f5e9' : '#fce4ec',
             cursor: 'pointer', flexShrink: 0,
           }}
         >
-          {admin.is_approved
+          {admin.isApproved
             ? <CheckCircleIcon sx={{ fontSize: 14, color: '#2e7d32' }} />
             : <CancelIcon sx={{ fontSize: 14, color: '#c62828' }} />
           }
           <span style={{
             fontSize: 11, fontWeight: 'bold',
-            color: admin.is_approved ? '#2e7d32' : '#c62828',
+            color: admin.isApproved ? '#2e7d32' : '#c62828',
           }}>
-            {admin.is_approved ? '승인됨' : '미승인'}
+            {admin.isApproved ? '승인됨' : '미승인'}
           </span>
         </button>
       )}

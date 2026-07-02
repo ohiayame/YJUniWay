@@ -5,19 +5,27 @@ export class AppSettings {
   @PrimaryColumn({ default: 1 })
   id: number;
 
-  @Column({ name: 'curfew_time', type: 'time', nullable: true })
+  @Column({
+    name: 'curfew_time',
+    type: 'time',
+    nullable: true,
+    transformer: {
+      to: (v: string | null) => v,
+      from: (v: string | null) => v?.slice(0, 5) ?? null,
+    },
+  })
   curfewTime: string | null;
 
-  @Column({ name: 'wifi_ssid', length: 100, nullable: true })
+  @Column({ name: 'wifi_ssid', type: 'varchar', length: 100, nullable: true })
   wifiSsid: string | null;
 
-  @Column({ name: 'wifi_password', length: 100, nullable: true })
+  @Column({ name: 'wifi_password', type: 'varchar', length: 100, nullable: true })
   wifiPassword: string | null;
 
-  @Column({ name: 'school_address_ko', length: 255, nullable: true })
+  @Column({ name: 'school_address_ko', type: 'varchar', length: 255, nullable: true })
   schoolAddressKo: string | null;
 
-  @Column({ name: 'school_address_ja', length: 255, nullable: true })
+  @Column({ name: 'school_address_ja', type: 'varchar', length: 255, nullable: true })
   schoolAddressJa: string | null;
 
   @Column({ name: 'notice_ko', type: 'text', nullable: true })

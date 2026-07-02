@@ -29,6 +29,7 @@ export interface CategorySection {
   items: CategoryItem[];
 }
 
+// 각 층 및 공용 공간 정보
 export const mockFloorSections: FloorSection[] = [
   {
     section_key: 'B1',
@@ -92,6 +93,7 @@ export const mockFloorSections: FloorSection[] = [
   },
 ];
 
+// 카테고리별 정보 (쓰레기 버리기, 규칙 등)
 export const mockCategorySections: CategorySection[] = [
   {
     title_ko: '쓰레기 버리기',

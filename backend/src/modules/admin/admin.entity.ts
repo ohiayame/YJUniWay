@@ -14,26 +14,29 @@ export enum AdminRole {
 @Entity('admins')
 export class Admin {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ length: 50 })
-  name: string;
+  name!: string;
 
-  @Column({ name: 'student_id', length: 20, unique: true, nullable: true })
-  studentId: string | null;
+  @Column({ name: 'student_id', type: 'varchar', length: 20, unique: true, nullable: true })
+  studentId!: string | null;
 
   @Column({ length: 20 })
-  phone: string;
+  phone!: string;
 
   @Column({ type: 'enum', enum: AdminRole, default: AdminRole.STAFF })
-  role: AdminRole;
+  role!: AdminRole;
+
+  @Column({ name: 'is_approved', default: false })
+  isApproved!: boolean;
 
   @Column({ length: 255 })
-  password: string;
+  password!: string;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ name: 'updated_at', nullable: true })
-  updatedAt: Date | null;
+  updatedAt!: Date | null;
 }

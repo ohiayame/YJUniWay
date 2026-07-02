@@ -8,9 +8,11 @@ import { Schedule } from './schedule.entity';
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
+  // GET /api/schedule          → schedules 테이블 전체 조회
+  // GET /api/schedule?date=... → 특정 날짜 일정만 조회 (메인 페이지 오늘/내일 일정에 사용)
   @Get()
-  @ApiOperation({ summary: '전체 일정 조회' })
-  @ApiQuery({ name: 'date', required: false, example: '2025-03-25' })
+  @ApiOperation({ summary: '전체 일정 조회 (date 쿼리로 날짜 필터 가능)' })
+  @ApiQuery({ name: 'date', required: false, example: '2026-04-07' })
   findAll(@Query('date') date?: string) {
     if (date) return this.scheduleService.findByDate(date);
     return this.scheduleService.findAll();

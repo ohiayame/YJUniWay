@@ -17,11 +17,26 @@ export class DormitoryItem {
   @Column({ name: 'section_id' })
   sectionId: number;
 
-  @Column({ name: 'content_ko', type: 'text' })
-  contentKo: string;
+  @Column({ name: 'text_ko', type: 'text' })
+  textKo: string;
 
-  @Column({ name: 'content_ja', type: 'text' })
-  contentJa: string;
+  @Column({ name: 'text_ja', type: 'text' })
+  textJa: string;
+
+  @Column({ name: 'warning_ko', type: 'text', nullable: true })
+  warningKo: string | null;
+
+  @Column({ name: 'warning_ja', type: 'text', nullable: true })
+  warningJa: string | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  pin: string | null;
+
+  @Column({ name: 'is_danger', default: false })
+  isDanger: boolean;
+
+  @Column({ name: 'sort_order', default: 0 })
+  sortOrder: number;
 
   @ManyToOne(() => DormitorySection, (section) => section.items, {
     onDelete: 'CASCADE',

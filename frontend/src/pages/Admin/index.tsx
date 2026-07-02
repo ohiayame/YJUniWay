@@ -4,14 +4,14 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SchoolIcon from '@mui/icons-material/School';
 import PersonIcon from '@mui/icons-material/Person';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { setAdmin, clearAdmin } from '../../store/slices/authSlice';
-import { mockAdmins } from '../../mock/adminData';
+import { login } from '../../api/admin';
+import axios from 'axios';
 
 const AdminPage = () => {
-  const dispatch = useDispatch();
-  const { isAdmin, role, name } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const { isAdmin, role, name } = useAppSelector((state) => state.auth);
 
   if (isAdmin) {
     return <AdminDashboard name={name} role={role} onLogout={() => dispatch(clearAdmin())} />;
@@ -28,29 +28,27 @@ const LoginForm = ({ onLogin }: {
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
 
-    const admin = mockAdmins.find(a => {
-      const idMatch = a.role === 'professor'
-        ? a.name === studentId   // 교수는 이름으로 로그인
-        : a.student_id === studentId;
-      return idMatch && a.password === password;
-    });
-
-    if (!admin) {
-      setError('아이디 또는 비밀번호가 올바르지 않습니다.');
-      return;
+    try {
+      const res = await login({ studentId, password });
+      // JWT 토큰 저장 (apiClient 인터셉터가 이 키를 사용)
+      localStorage.setItem('token', res.accessToken);
+      onLogin(res.name, res.role);
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message ?? '로그인에 실패했습니다.');
+      } else {
+        setError('로그인에 실패했습니다.');
+      }
+    } finally {
+      setLoading(false);
     }
-
-    if (admin.role === 'staff' && !admin.is_approved) {
-      setError('교수님의 승인이 필요합니다.');
-      return;
-    }
-
-    onLogin(admin.name, admin.role);
   };
 
   return (
@@ -141,19 +139,20 @@ const LoginForm = ({ onLogin }: {
 
           <button
             type="submit"
+            disabled={loading}
             style={{
               width: '100%',
               padding: 14,
-              background: '#1a1a2e',
+              background: loading ? '#888' : '#1a1a2e',
               color: 'white',
               border: 'none',
               borderRadius: 12,
               fontSize: 14,
               fontWeight: 'bold',
-              cursor: 'pointer',
+              cursor: loading ? 'default' : 'pointer',
             }}
           >
-            로그인
+            {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
       </div>

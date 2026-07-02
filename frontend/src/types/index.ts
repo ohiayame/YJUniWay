@@ -1,10 +1,10 @@
 export interface Student {
   id: number;
-  name_ja: string;
-  name_ko: string | null;
-  name_en: string | null;
+  nameJa: string;
+  nameKo: string | null;
+  nameEn: string | null;
   gender: 'M' | 'F';
-  room_number: string | null;
+  roomNumber: string | null;
   notes: string | null;
 }
 
@@ -68,6 +68,26 @@ export interface RollCall {
   student_id: number;
   date: string;
   is_present: boolean;
+}
+
+export interface LaundrySettings {
+  id: number;
+  washPrice: string;
+  dryPrice: string;
+  appName: string;
+  appUrl: string;
+  warningKo: string | null;
+  warningJa: string | null;
+  videoUrl: string | null;   // 서버 업로드 경로 (/uploads/...) 또는 null
+  imageUrl: string | null;   // 서버 업로드 경로 (/uploads/...) 또는 null
+  updatedAt: string;
+}
+
+export interface LaundryStep {
+  id: number;
+  sortOrder: number;
+  textKo: string;
+  textJa: string;
 }
 
 export interface Admin {

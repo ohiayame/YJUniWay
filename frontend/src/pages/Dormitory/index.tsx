@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import NightsStayIcon from '@mui/icons-material/NightsStay';
@@ -11,8 +12,10 @@ import RecyclingIcon from '@mui/icons-material/Recycling';
 import LockIcon from '@mui/icons-material/Lock';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import PageLayout from '../../components/PageLayout';
-import { mockFloorSections, mockCategorySections } from '../../mock/dormitoryData';
-import { mockSettings } from '../../mock/mainData';
+import { getFloorSections, getCategorySections } from '../../api/dormitory';
+import { getSettings } from '../../api/settings';
+import type { DormitorySection } from '../../api/dormitory';
+import type { AppSettings } from '../../api/settings';
 
 const FLOOR_BADGE_STYLE: Record<string, { bg: string; color: string }> = {
   B1:  { bg: '#e8eaf6', color: '#3949ab' },
@@ -32,6 +35,17 @@ const DormitoryPage = () => {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
   const isKo = i18n.language === 'ko';
+
+  const [floorSections, setFloorSections] = useState<DormitorySection[]>([]);
+  const [categorySections, setCategorySections] = useState<DormitorySection[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+
+  useEffect(() => {
+    // 층별 섹션, 카테고리 섹션, 앱 설정을 병렬로 조회
+    getFloorSections().then(setFloorSections).catch(() => setFloorSections([]));
+    getCategorySections().then(setCategorySections).catch(() => setCategorySections([]));
+    getSettings().then(setSettings).catch(() => setSettings(null));
+  }, []);
 
   return (
     <PageLayout titleKo="기숙사 안내" titleJa="寮のご案内">
@@ -57,7 +71,7 @@ const DormitoryPage = () => {
             {isKo ? '통금 / 점호' : '門限 / 点呼'}
           </div>
           <div style={{ fontSize: 34, fontWeight: 'bold', color: 'white', letterSpacing: -1, marginLeft: 20 }}>
-            {mockSettings.curfew_time ?? '--:--'}
+            {settings?.curfewTime ?? '--:--'}
           </div>
         </div>
 
@@ -90,10 +104,10 @@ const DormitoryPage = () => {
           width: 2, background: '#eee',
         }} />
 
-        {mockFloorSections.map((floor) => {
-          const badge = FLOOR_BADGE_STYLE[floor.section_key];
+        {floorSections.map((floor) => {
+          const badge = FLOOR_BADGE_STYLE[floor.sectionKey] ?? { bg: '#f5f5f5', color: '#666' };
           return (
-            <div key={floor.section_key} style={{ position: 'relative', display: 'flex', gap: 12, marginBottom: 10 }}>
+            <div key={floor.sectionKey} style={{ position: 'relative', display: 'flex', gap: 12, marginBottom: 10 }}>
               {/* 타임라인 점 */}
               <div style={{
                 position: 'absolute', left: -7, top: 10,
@@ -114,14 +128,14 @@ const DormitoryPage = () => {
                     fontSize: 11, fontWeight: 'bold', flexShrink: 0,
                     background: badge.bg, color: badge.color,
                   }}>
-                    {floor.section_key}
+                    {floor.sectionKey}
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 'bold', color: '#111' }}>
-                    {isKo ? floor.title_ko : floor.title_ja}
+                    {isKo ? floor.titleKo : floor.titleJa}
                   </div>
-                  {(floor.subtitle_ko || floor.subtitle_ja) && (
+                  {(floor.subtitleKo || floor.subtitleJa) && (
                     <div style={{ fontSize: 11, color: '#aaa' }}>
-                      {isKo ? floor.subtitle_ko : floor.subtitle_ja}
+                      {isKo ? floor.subtitleKo : floor.subtitleJa}
                     </div>
                   )}
                 </div>
@@ -129,14 +143,14 @@ const DormitoryPage = () => {
                 {/* 카드 바디 */}
                 {floor.items.length > 0 && (
                   <div style={{ padding: '0 14px 12px' }}>
-                    {floor.items.map((item, i) => (
-                      <div key={i} style={{
+                    {floor.items.map((item) => (
+                      <div key={item.id} style={{
                         fontSize: 13, color: '#555', lineHeight: 1.5,
                         padding: '6px 0', borderTop: '1px solid #eee',
                         textAlign: 'left',
                       }}>
-                        ・{isKo ? item.text_ko : item.text_ja}
-                        {item.warning_ko && (
+                        ・{isKo ? item.textKo : item.textJa}
+                        {item.warningKo && (
                           <div style={{ marginTop: 4 }}>
                             <span style={{
                               display: 'inline-flex', alignItems: 'center', gap: 3,
@@ -145,7 +159,7 @@ const DormitoryPage = () => {
                               padding: '2px 8px',
                             }}>
                               <WarningAmberIcon sx={{ fontSize: 12, flexShrink: 0 }} />
-                              {isKo ? item.warning_ko : item.warning_ja}
+                              {isKo ? item.warningKo : item.warningJa}
                             </span>
                           </div>
                         )}
@@ -182,36 +196,36 @@ const DormitoryPage = () => {
         {isKo ? '기타' : 'その他'}
       </div>
 
-      {mockCategorySections.map((cat, ci) => (
-        <div key={ci} style={{ border: '1px solid #eee', borderRadius: 14, overflow: 'hidden', marginBottom: 10 }}>
+      {categorySections.map((cat) => (
+        <div key={cat.id} style={{ border: '1px solid #eee', borderRadius: 14, overflow: 'hidden', marginBottom: 10 }}>
           <div style={{
             padding: '11px 14px', background: 'white',
             display: 'flex', alignItems: 'center', gap: 8,
             fontWeight: 'bold', fontSize: 14, color: '#111',
           }}>
-            {CATEGORY_ICONS[cat.title_ko]}
-            {isKo ? cat.title_ko : cat.title_ja}
+            {CATEGORY_ICONS[cat.titleKo]}
+            {isKo ? cat.titleKo : cat.titleJa}
           </div>
 
           <div style={{ background: '#fafafa', padding: '0 14px 12px' }}>
             {cat.items.map((item, ii) => (
-              <div key={ii} style={{
+              <div key={item.id} style={{
                 fontSize: 13, lineHeight: 1.5,
                 padding: '6px 0', borderTop: '1px solid #eee',
                 display: 'flex', gap: 8, alignItems: 'flex-start',
-                color: item.is_danger ? '#c0392b' : '#555',
-                fontWeight: item.is_danger ? 500 : 'normal',
+                color: item.isDanger ? '#c0392b' : '#555',
+                fontWeight: item.isDanger ? 500 : 'normal',
               }}>
-                {item.is_danger
+                {item.isDanger
                   ? <BlockIcon sx={{ fontSize: 14, color: '#c0392b', mt: '3px', flexShrink: 0 }} />
                   : item.pin
                     ? <LockIcon sx={{ fontSize: 14, color: '#856404', mt: '4px', flexShrink: 0 }} />
-                    : ci === 0 && ii === 0
+                    : ii === 0
                       ? <LocationOnIcon sx={{ fontSize: 14, color: '#888', mt: '3px', flexShrink: 0 }} />
                       : <RecyclingIcon sx={{ fontSize: 14, color: '#888', mt: '3px', flexShrink: 0 }} />
                 }
                 <div>
-                  {isKo ? item.text_ko : item.text_ja}
+                  {isKo ? item.textKo : item.textJa}
                   {item.pin && (
                     <div style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,

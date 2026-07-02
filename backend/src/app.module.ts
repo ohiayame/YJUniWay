@@ -8,6 +8,7 @@ import { DormitoryModule } from './modules/dormitory/dormitory.module';
 import { StudentModule } from './modules/student/student.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { LaundryModule } from './modules/laundry/laundry.module';
 import { databaseConfig } from './config/database.config';
 
 @Module({
@@ -25,6 +26,7 @@ import { databaseConfig } from './config/database.config';
     StudentModule,
     AdminModule,
     SettingsModule,
+    LaundryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

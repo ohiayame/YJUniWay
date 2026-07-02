@@ -9,10 +9,18 @@ import { DormitoryItem } from './dormitory-item.entity';
 export class DormitoryController {
   constructor(private readonly dormitoryService: DormitoryService) {}
 
-  @Get()
-  @ApiOperation({ summary: '기숙사 전체 섹션+항목 조회' })
-  findAll() {
-    return this.dormitoryService.findAllSections();
+  // GET /api/dormitory/floor → dormitory_sections(type=floor) + items 조회 (층별 안내 영역)
+  @Get('floor')
+  @ApiOperation({ summary: '층별 기숙사 섹션+항목 조회 (B1/1F/2F/4F/ALL)' })
+  findFloor() {
+    return this.dormitoryService.findFloorSections();
+  }
+
+  // GET /api/dormitory/category → dormitory_sections(type=category) + items 조회 (규칙/쓰레기 영역)
+  @Get('category')
+  @ApiOperation({ summary: '카테고리별 기숙사 섹션+항목 조회 (쓰레기/규칙 등)' })
+  findCategory() {
+    return this.dormitoryService.findCategorySections();
   }
 
   @Post('section')
