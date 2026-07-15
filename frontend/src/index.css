@@ -1,0 +1,14 @@
+.copy-btn {
+  background: white;
+  color: #555;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.copy-btn:active {
+  background-color: #e0e0e0;
+}

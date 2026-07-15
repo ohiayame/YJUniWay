@@ -1,38 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import InboxIcon from '@mui/icons-material/Inbox';
-import NightsStayIcon from '@mui/icons-material/NightsStay';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import WifiIcon from '@mui/icons-material/Wifi';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import CallIcon from '@mui/icons-material/Call';
-import campusMapKR from '../../assets/campus-map_KR.png';
-import campusMapJP from '../../assets/campus-map_JP.png';
-import yjuLogo from '../../assets/yju.png';
 import PageLayout from '../../components/PageLayout';
 import { getScheduleByDate } from '../../api/schedule';
 import { getSettings, getContacts } from '../../api/settings';
 import type { Schedule } from '../../api/schedule';
 import type { AppSettings, EmergencyContact } from '../../api/settings';
-
-const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div style={{
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#bbb',
-    letterSpacing: 1,
-    textTransform: 'uppercase' as const,
-    margin: '0 0 8px',
-  }}>
-    {children}
-  </div>
-);
+import TodayScheduleCard from './components/TodayScheduleCard';
+import TomorrowGatheringCard from './components/TomorrowGatheringCard';
+import EmergencyContactList from './components/EmergencyContactList';
+import { NoticeBanner, CurfewStatusCards, WifiCard, CampusMapCard, SchoolAddressCard } from './components/InfoCards';
 
 // 오늘/내일 날짜를 'YYYY-MM-DD' 형식으로 반환
 const getDateString = (offsetDays: number): string => {
-  const d = new Date();
+  const d = new Date('2026-04-09'); // 기준 날짜를 2026-04-07로 설정
   d.setDate(d.getDate() + offsetDays);
   return d.toISOString().slice(0, 10);
 };
@@ -62,273 +42,24 @@ const MainPage = () => {
 
   return (
     <PageLayout titleKo="YJUniWay" titleJa="YJUniWay">
+      {/* 오늘 일정 */}
+      <TodayScheduleCard todaySchedules={todaySchedules} isKo={isKo} />
+      {/* 내일 집합 공지 */}
+      <TomorrowGatheringCard tomorrowGathering={tomorrowGathering} isKo={isKo} />
+      {/* 공지사항 */}
+      <NoticeBanner settings={settings} isKo={isKo} />
 
-      {/* 오늘의 일정 */}
-      <SectionLabel>{isKo ? '오늘의 일정' : '今日のスケジュール'}</SectionLabel>
-      <div style={{
-        background: '#1a1a2e',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 10,
-      }}>
-
-        {todaySchedules.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#27ae60', flexShrink: 0 }} />
-            <span style={{ fontSize: 14, color: 'white' }}>
-              {isKo ? '자유 탐방' : '自由探索'}
-            </span>
-          </div>
-        ) : todaySchedules.length === 1 ? (
-          /* 일정 1개 — 크게 표시 */
-          <>
-            <div style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>
-              {isKo ? todaySchedules[0].titleKo : todaySchedules[0].titleJa}
-            </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
-              {todaySchedules[0].timeStart}
-              {todaySchedules[0].timeEnd ? ` – ${todaySchedules[0].timeEnd}` : ''}
-              {' · '}
-              {isKo ? todaySchedules[0].locationKo : todaySchedules[0].locationJa}
-            </div>
-          </>
-        ) : (
-          /* 일정 여러 개 — 타임라인 */
-          <>
-            <div style={{
-              marginTop: 0,
-              maxHeight: 150,
-              overflowY: 'auto',
-              scrollbarWidth: 'thin' as const,
-            }}>
-              {todaySchedules.map((s, i) => (
-                <div key={s.id} style={{
-                  display: 'flex',
-                  gap: 10,
-                  alignItems: 'flex-start',
-                  padding: '8px 0',
-                  borderBottom: i < todaySchedules.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                }}>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', minWidth: 44, paddingTop: 2 }}>
-                    {s.timeStart ?? ''}
-                  </div>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(255,255,255,0.4)', flexShrink: 0, marginTop: 4 }} />
-                  <div>
-                    <div style={{ fontSize: 13, color: 'white', fontWeight: 500, lineHeight: 1.4 }}>
-                      {isKo ? s.titleKo : s.titleJa}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
-                      {isKo ? s.locationKo : s.locationJa}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 6, letterSpacing: 1 }}>
-              ▼ {isKo ? '스크롤' : 'スクロール'}
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* 내일 집합 */}
-      <SectionLabel>{isKo ? '내일 집합' : '明日の集合'}</SectionLabel>
-      {tomorrowGathering ? (
-        <div style={{
-          background: '#FFF5EC',
-          borderRadius: 14,
-          padding: 14,
-          marginBottom: 10,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-        }}>
-          <LocationOnIcon sx={{ fontSize: 28, color: '#f39c12' }} />
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 'bold', color: '#111' }}>
-              {isKo ? tomorrowGathering.locationKo : tomorrowGathering.locationJa}
-            </div>
-            <div style={{ fontSize: 13, color: '#aaa', marginTop: 2 }}>
-              {tomorrowGathering.timeStart} {isKo ? '집합' : '集合'}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          background: '#f7f7f7',
-          borderRadius: 14,
-          padding: 14,
-          marginBottom: 10,
-        }}>
-          <InboxIcon sx={{ fontSize: 22, color: '#ccc' }} />
-          <div style={{ fontSize: 13, color: '#bbb' }}>
-            {isKo ? '미정' : '未定'}
-          </div>
-        </div>
-      )}
-
-      {/* 공지 */}
-      {settings && (isKo ? settings.noticeKo : settings.noticeJa) && (
-        <div style={{
-          background: '#fffbe6',
-          borderLeft: '3px solid #f39c12',
-          borderRadius: '0 10px 10px 0',
-          padding: '10px 12px',
-          fontSize: 13,
-          color: '#555',
-          lineHeight: 1.6,
-          marginBottom: 10,
-        }}>
-          <WarningAmberIcon sx={{ fontSize: 14, color: '#f39c12', verticalAlign: 'middle', mr: 0.5 }} />
-          {isKo ? settings.noticeKo : settings.noticeJa}
-        </div>
-      )}
-
-      {/* 통금 / 점호 */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-        <div style={{
-          flex: 1, textAlign: 'center', padding: '12px 8px',
-          background: 'white', border: '1px solid #eee', borderRadius: 14,
-          boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-        }}>
-          <AssignmentIcon sx={{ fontSize: 20, color: '#555' }} />
-          <div style={{ fontSize: 14, fontWeight: 'bold', marginTop: 4 }}>
-            {settings?.curfewTime ?? (isKo ? '미정' : '未定')}
-          </div>
-          <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>
-            {isKo ? '통금/점호' : '門限/点呼'}
-          </div>
-        </div>
-        <div style={{
-          flex: 1, textAlign: 'center', padding: '12px 8px',
-          background: 'white', border: '1px solid #eee', borderRadius: 14,
-          boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-        }}>
-          <NightsStayIcon sx={{ fontSize: 20, color: '#555' }} />
-          <div style={{ fontSize: 14, fontWeight: 'bold', marginTop: 4 }}>
-            24:00 ~ 6:00
-          </div>
-          <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>
-            {isKo ? '잠김' : '施錠'}
-          </div>
-        </div>
-      </div>
-
-      {/* WiFi */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        background: '#f7f7f7',
-        borderRadius: 12,
-        padding: '12px 14px',
-        marginBottom: 10,
-      }}>
-        <WifiIcon sx={{ fontSize: 22, color: '#555' }} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 'bold', color: '#111' }}>{isKo ? '생활관' : '生活館'} WIFI : {settings?.wifiSsid}</div>
-          <div style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>password : {settings?.wifiPassword}</div>
-        </div>
-        <button
-          className="copy-btn"
-          onClick={() => navigator.clipboard.writeText(settings?.wifiPassword ?? '')}
-        >
-          {isKo ? '복사' : 'コピー'}
-        </button>
-      </div>
+      {/* 통금 */}
+      <CurfewStatusCards settings={settings} isKo={isKo} />
+      {/* WIFI */}
+      <WifiCard settings={settings} isKo={isKo} />
 
       {/* 교내 지도 */}
-      <SectionLabel>{isKo ? '교내 지도' : 'キャンパスマップ'}</SectionLabel>
-      <div style={{ borderRadius: 14, overflow: 'hidden', marginBottom: 10, border: '1px solid #eee', position: 'relative' }}>
-        <img
-          src={isKo ? campusMapKR : campusMapJP}
-          alt={isKo ? '교내 지도' : 'キャンパスマップ'}
-          style={{ width: '100%', display: 'block', touchAction: 'pinch-zoom' }}
-        />
-        <div style={{
-          position: 'absolute',
-          bottom: 8,
-          right: 8,
-          background: 'rgba(0,0,0,0.45)',
-          color: 'white',
-          fontSize: 11,
-          padding: '4px 9px',
-          borderRadius: 20,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <ZoomInIcon sx={{ fontSize: 13, verticalAlign: 'middle' }} /> {isKo ? '핀치로 확대' : 'ピンチで拡大'}
-        </div>
-      </div>
-
+      <CampusMapCard isKo={isKo} />
       {/* 학교 주소 */}
-      <SectionLabel>{isKo ? '학교 주소' : '学校住所'}</SectionLabel>
-      <div style={{
-        background: '#f7f7f7',
-        borderRadius: 12,
-        padding: '12px 14px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        marginBottom: 10,
-      }}>
-        <img src={yjuLogo} alt="YJU" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8, flexShrink: 0 }} />
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 'bold', color: '#111' }}>
-            {isKo ? '영진전문대학교' : '永進専門大学校'}
-          </div>
-          <div style={{ fontSize: 12, color: '#888', marginTop: 3 }}>
-            {isKo ? settings?.schoolAddressKo : settings?.schoolAddressJa}
-          </div>
-        </div>
-      </div>
-
+      <SchoolAddressCard settings={settings} isKo={isKo} />
       {/* 긴급 연락처 */}
-      <SectionLabel>{isKo ? '긴급 연락처' : '緊急連絡先'}</SectionLabel>
-      <div style={{
-        background: 'white',
-        border: '1px solid #f0f0f0',
-        borderRadius: 14,
-        padding: '4px 14px',
-      }}>
-        {contacts.map((contact, i) => (
-          <div key={contact.id} style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '9px 0',
-            borderBottom: i < contacts.length - 1 ? '1px solid #f5f5f5' : 'none',
-          }}>
-            <div>
-              <div style={{ fontSize: 12, color: '#999' }}>
-                {isKo ? contact.labelKo : contact.labelJa}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 'bold', color: '#1a1a2e', marginTop: 1 }}>
-                {contact.phone}
-              </div>
-            </div>
-            <a
-              href={`tel:${contact.phone}`}
-              style={{
-                background: '#edfaf3',
-                color: '#27ae60',
-                border: 'none',
-                padding: '5px 12px',
-                borderRadius: 20,
-                fontSize: 12,
-                textDecoration: 'none',
-                display: 'inline-block',
-              }}
-            >
-              <CallIcon sx={{ fontSize: 12, verticalAlign: 'middle', mr: 0.5 }} />
-              {isKo ? '전화' : '電話'}
-            </a>
-          </div>
-        ))}
-      </div>
-
+      <EmergencyContactList contacts={contacts} isKo={isKo} />
     </PageLayout>
   );
 };
