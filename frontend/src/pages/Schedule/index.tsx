@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import PageLayout from '../../components/PageLayout';
 import { getSchedules } from '../../api/schedule';
 import type { Schedule } from '../../api/schedule';
@@ -22,8 +23,13 @@ const SchedulePage = () => {
 
   const [allSchedules, setAllSchedules] = useState<Schedule[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(TODAY);
+  const [openMemos, setOpenMemos] = useState<Record<number, boolean>>({});
   const stripRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const toggleMemo = (id: number) => {
+    setOpenMemos((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   useEffect(() => {
     // 전체 일정을 한 번 로드하여 날짜 스트립과 타임라인 모두에 사용
@@ -214,19 +220,64 @@ const SchedulePage = () => {
 
                   {/* 내용 */}
                   <div style={{ flex: 1, paddingLeft: 12, paddingBottom: isLast ? 4 : 20 }}>
-                    <div style={{
-                      fontSize: 14, fontWeight: 500, lineHeight: 1.4, textAlign: 'center',
-                      color: isRC ? ROLLCALL_COLOR : '#111',
-                    }}>
-                      {isKo ? item.titleKo : item.titleJa}
-                    </div>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2,
-                      fontSize: 12, color: '#bbb', marginTop: 3,
-                    }}>
-                      <LocationOnIcon sx={{ fontSize: 13, color: '#ccc' }} />
-                      {isKo ? item.locationKo : (item.locationJa ?? item.locationKo)}
-                    </div>
+                    {(() => {
+                      const memoText = isKo ? item.notesKo : (item.notesJa ?? item.notesKo);
+                      const isMemoOpen = !!openMemos[item.id];
+                      return (
+                        <div style={{ background: '#f8f7f5', borderRadius: 10, padding: '14px 16px' }}>
+                          <div style={{
+                            fontSize: 14, fontWeight: 600, lineHeight: 1.4,
+                            color: isRC ? ROLLCALL_COLOR : '#111', marginBottom: 5,
+                          }}>
+                            {isKo ? item.titleKo : item.titleJa}
+                          </div>
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 2,
+                            fontSize: 12, color: '#bbb',
+                          }}>
+                            <LocationOnIcon sx={{ fontSize: 13, color: '#ccc' }} />
+                            {isKo ? item.locationKo : (item.locationJa ?? item.locationKo)}
+                          </div>
+                          {memoText && (
+                            <>
+                              <div style={{
+                                maxHeight: isMemoOpen ? 60 : 0, opacity: isMemoOpen ? 1 : 0,
+                                overflow: 'hidden', transition: 'max-height .2s ease, opacity .2s ease',
+                              }}>
+                                <div style={{
+                                  fontSize: 11, color: '#999', lineHeight: 1.5,
+                                  borderTop: '1px solid rgba(0,0,0,.06)', marginTop: 8, paddingTop: 7,
+                                }}>
+                                  <span style={{
+                                    display: 'inline-block', fontSize: 10, fontWeight: 700,
+                                    color: '#2e7d32', background: '#e8f5e9',
+                                    borderRadius: 4, padding: '1px 6px', marginRight: 6,
+                                  }}>
+                                    {isKo ? '공지' : 'お知らせ'}
+                                  </span>
+                                  {memoText}
+                                </div>
+                              </div>
+                              <div
+                                onClick={() => toggleMemo(item.id)}
+                                style={{
+                                  cursor: 'pointer', color: '#a39d92', fontSize: 11,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                                  gap: 3, userSelect: 'none', marginTop: 4,
+                                }}
+                              >
+                                {isKo ? '메모' : 'メモ'}
+                                <ArrowDropDownIcon sx={{
+                                  fontSize: 18,
+                                  transition: 'transform .15s',
+                                  transform: isMemoOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                }} />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                 </div>
