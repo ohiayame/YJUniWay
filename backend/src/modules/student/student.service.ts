@@ -70,7 +70,7 @@ export class StudentService {
             contentBlock,
             {
               type: 'text',
-              text: `이 문서에서 학생 명단을 추출해 JSON 배열로만 반환해주세요. 다른 텍스트는 포함하지 마세요.
+              text: `이 문서에서 학생 명단을 추출해 JSON 배열로만 반환해주세요. 다른 텍스트는 포함하지 마세요. 이름은 '성 이름' 순으로 표기하세요.
 각 학생 객체 필드:
 - nameJa: string (일본어 이름, 필수)
 - nameKo: string | null (한국어 이름, 없으면 영어 이름 발음으로 생성)
