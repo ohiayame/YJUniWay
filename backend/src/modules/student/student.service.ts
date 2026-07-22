@@ -70,27 +70,62 @@ export class StudentService {
             contentBlock,
             {
               type: 'text',
-              text: `이 문서에서 학생 명단을 추출해 JSON 배열로만 반환해주세요. 다른 텍스트는 포함하지 마세요. 이름은 '성 이름' 순으로 표기하세요.
-각 학생 객체 필드:
-- nameJa: string (일본어 이름, 필수)
-- nameKo: string | null (한국어 이름, 없으면 영어 이름 발음으로 생성)
-- nameEn: string | null (영어 이름)
-- gender: "M" | "F"
-- roomNumber: string | null (방 번호)
-- notes: string | null (주의사항)
-
-JSON 배열만 출력:`,
+              text: `이 문서에서 학생 명단을 추출해주세요. 이름은 '성 이름' 순으로 표기하세요. nameKo가 없으면 영어 이름 발음으로 생성하세요.`,
             },
           ],
         },
       ],
+      output_config: {
+        format: {
+          type: 'json_schema',
+          schema: {
+            type: 'object',
+            properties: {
+              students: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    nameJa: { type: 'string', description: '일본어 이름' },
+                    nameKo: {
+                      anyOf: [{ type: 'string' }, { type: 'null' }],
+                    },
+                    nameEn: {
+                      anyOf: [{ type: 'string' }, { type: 'null' }],
+                    },
+                    gender: { type: 'string', enum: ['M', 'F'] },
+                    roomNumber: {
+                      anyOf: [{ type: 'string' }, { type: 'null' }],
+                    },
+                    notes: {
+                      anyOf: [{ type: 'string' }, { type: 'null' }],
+                    },
+                  },
+                  required: [
+                    'nameJa',
+                    'nameKo',
+                    'nameEn',
+                    'gender',
+                    'roomNumber',
+                    'notes',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['students'],
+            additionalProperties: false,
+          },
+        },
+      },
     });
 
     const text =
-      response.content[0].type === 'text' ? response.content[0].text.trim() : '[]';
-
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+      response.content[0].type === 'text'
+        ? response.content[0].text
+        : '{"students":[]}';
+    const parsed = JSON.parse(text) as { students: Partial<Student>[] };
+    return parsed.students;
   }
 
   // 점호 --------------------------------------------------
