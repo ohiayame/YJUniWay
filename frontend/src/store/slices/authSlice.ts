@@ -35,6 +35,7 @@ const authSlice = createSlice({
       state.role = null;
       state.name = null;
       localStorage.removeItem('adminAuth');
+      localStorage.removeItem('token');
     },
   },
 });

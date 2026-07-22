@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query,UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ScheduleService } from './schedule.service';
 import { Schedule } from './schedule.entity';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('schedule')
 @Controller('schedule')
@@ -19,6 +20,7 @@ export class ScheduleController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '일정 등록' })
   create(@Body() body: Partial<Schedule>) {
@@ -26,6 +28,7 @@ export class ScheduleController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '일정 수정' })
   update(@Param('id') id: string, @Body() body: Partial<Schedule>) {
@@ -33,6 +36,7 @@ export class ScheduleController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '일정 삭제' })
   remove(@Param('id') id: string) {

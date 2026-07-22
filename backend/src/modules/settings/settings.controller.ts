@@ -1,8 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
 import { AppSettings } from './app-settings.entity';
 import { EmergencyContact } from './emergency-contact.entity';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('settings')
 @Controller('settings')
@@ -17,6 +27,7 @@ export class SettingsController {
   }
 
   @Put()
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '앱 설정 수정 (통금, WiFi, 주소, 공지 등)' })
   updateSettings(@Body() body: Partial<AppSettings>) {
@@ -33,6 +44,7 @@ export class SettingsController {
   }
 
   @Post('contacts')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '긴급 연락처 등록' })
   createContact(@Body() body: Partial<EmergencyContact>) {
@@ -40,13 +52,18 @@ export class SettingsController {
   }
 
   @Put('contacts/:id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '긴급 연락처 수정' })
-  updateContact(@Param('id') id: string, @Body() body: Partial<EmergencyContact>) {
+  updateContact(
+    @Param('id') id: string,
+    @Body() body: Partial<EmergencyContact>,
+  ) {
     return this.settingsService.updateContact(+id, body);
   }
 
   @Delete('contacts/:id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '긴급 연락처 삭제' })
   removeContact(@Param('id') id: string) {

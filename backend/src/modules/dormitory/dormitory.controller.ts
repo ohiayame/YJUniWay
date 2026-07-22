@@ -1,8 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { DormitoryService } from './dormitory.service';
 import { DormitorySection } from './dormitory-section.entity';
 import { DormitoryItem } from './dormitory-item.entity';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('dormitory')
 @Controller('dormitory')
@@ -18,12 +28,15 @@ export class DormitoryController {
 
   // GET /api/dormitory/category → dormitory_sections(type=category) + items 조회 (규칙/쓰레기 영역)
   @Get('category')
-  @ApiOperation({ summary: '카테고리별 기숙사 섹션+항목 조회 (쓰레기/규칙 등)' })
+  @ApiOperation({
+    summary: '카테고리별 기숙사 섹션+항목 조회 (쓰레기/규칙 등)',
+  })
   findCategory() {
     return this.dormitoryService.findCategorySections();
   }
 
   @Post('section')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '섹션 등록' })
   createSection(@Body() body: Partial<DormitorySection>) {
@@ -31,13 +44,18 @@ export class DormitoryController {
   }
 
   @Put('section/:id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '섹션 수정' })
-  updateSection(@Param('id') id: string, @Body() body: Partial<DormitorySection>) {
+  updateSection(
+    @Param('id') id: string,
+    @Body() body: Partial<DormitorySection>,
+  ) {
     return this.dormitoryService.updateSection(+id, body);
   }
 
   @Delete('section/:id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '섹션 삭제 (항목 포함)' })
   removeSection(@Param('id') id: string) {
@@ -47,6 +65,7 @@ export class DormitoryController {
   // 항목 --------------------------------------------------
 
   @Post('item')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '항목 등록' })
   createItem(@Body() body: Partial<DormitoryItem>) {
@@ -54,6 +73,7 @@ export class DormitoryController {
   }
 
   @Put('item/:id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '항목 수정' })
   updateItem(@Param('id') id: string, @Body() body: Partial<DormitoryItem>) {
@@ -61,6 +81,7 @@ export class DormitoryController {
   }
 
   @Delete('item/:id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '항목 삭제' })
   removeItem(@Param('id') id: string) {
