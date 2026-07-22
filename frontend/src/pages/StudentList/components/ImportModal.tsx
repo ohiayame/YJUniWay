@@ -4,7 +4,7 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { parseStudentDocument } from '../../../api/student';
 import type { ParsedStudent } from '../../../api/student';
-import { Overlay, ModalBox, ModalHeader } from './ModalShell';
+import { Overlay, ModalBox, ModalHeader } from '../../../components/ModalShell';
 
 const rowInputStyle: React.CSSProperties = {
   width: '100%', padding: '6px 8px', borderRadius: 8,

@@ -1,6 +1,6 @@
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { Student } from '../../../api/student';
-import { Overlay, ModalBox, ModalHeader } from './ModalShell';
+import { Overlay, ModalBox, ModalHeader } from '../../../components/ModalShell';
 
 // 학생 삭제 확인 모달
 const DeleteConfirmModal = ({

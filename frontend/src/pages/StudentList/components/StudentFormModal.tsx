@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Student } from '../../../api/student';
-import { Overlay, ModalBox, ModalHeader } from './ModalShell';
+import { Overlay, ModalBox, ModalHeader } from '../../../components/ModalShell';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
