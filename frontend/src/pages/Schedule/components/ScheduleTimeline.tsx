@@ -1,11 +1,22 @@
 import { useState } from 'react';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import NotesIcon from '@mui/icons-material/Notes';
 import type { Schedule } from '../../../api/schedule';
 import { isRollCallItem, formatLabel } from '../utils';
+import MemoPanel from './memo/MemoPanel';
+import ScheduleMemoBadge from './memo/ScheduleMemoBadge';
 
 const DOT_COLORS = ['#1a1a2e', '#f39c12', '#27ae60', '#8e44ad', '#2980b9'];
 const ROLLCALL_COLOR = '#e74c3c';
+
+const itemBtnStyle = (color: string): React.CSSProperties => ({
+  width: 22, height: 22, borderRadius: 6, border: 'none',
+  background: `${color}18`, color, cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+});
 
 interface ScheduleTimelineProps {
   timelineItems: Schedule[];
@@ -13,14 +24,22 @@ interface ScheduleTimelineProps {
   mainCount: number;
   selectedDate: string;
   isKo: boolean;
+  isAdmin: boolean;
+  onEdit: (item: Schedule) => void;
+  onDelete: (item: Schedule) => void;
 }
 
 // 날짜 레이블 + 자유탐방 카드 + 일정 타임라인
-const ScheduleTimeline = ({ timelineItems, isFreeDay, mainCount, selectedDate, isKo }: ScheduleTimelineProps) => {
+const ScheduleTimeline = ({ timelineItems, isFreeDay, mainCount, selectedDate, isKo, isAdmin, onEdit, onDelete }: ScheduleTimelineProps) => {
   const [openMemos, setOpenMemos] = useState<Record<number, boolean>>({});
+  const [openAdminMemos, setOpenAdminMemos] = useState<Record<number, boolean>>({});
 
   const toggleMemo = (id: number) => {
     setOpenMemos((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleAdminMemo = (id: number) => {
+    setOpenAdminMemos((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   return (
@@ -113,13 +132,40 @@ const ScheduleTimeline = ({ timelineItems, isFreeDay, mainCount, selectedDate, i
                     const isMemoOpen = !!openMemos[item.id];
                     return (
                       <div style={{ background: '#f8f7f5', borderRadius: 10, padding: '14px 16px' }}>
-                        
-                        {/* 일정 제목 */}
-                        <div style={{
-                          fontSize: 14, fontWeight: 600, lineHeight: 1.4,
-                          color: isRC ? ROLLCALL_COLOR : '#111', marginBottom: 5,
-                        }}>
-                          {isKo ? item.titleKo : item.titleJa}
+
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                          {/* 일정 제목 */}
+                          <div style={{
+                            fontSize: 14, fontWeight: 600, lineHeight: 1.4,
+                            color: isRC ? ROLLCALL_COLOR : '#111', marginBottom: 5,
+                          }}>
+                            {isKo ? item.titleKo : item.titleJa}
+                          </div>
+
+                          {/* 편집/삭제/메모 버튼 */}
+                          {isAdmin && (
+                            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                              <button
+                                onClick={() => toggleAdminMemo(item.id)}
+                                style={{
+                                  width: 22, height: 22, borderRadius: 6, border: 'none', cursor: 'pointer',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  flexShrink: 0, position: 'relative',
+                                  background: openAdminMemos[item.id] ? '#4d4a7a' : '#4d4a7a18',
+                                  color: openAdminMemos[item.id] ? 'white' : '#4d4a7a',
+                                }}
+                              >
+                                <NotesIcon sx={{ fontSize: 12 }} />
+                                <ScheduleMemoBadge scheduleId={item.id} active={!!openAdminMemos[item.id]} />
+                              </button>
+                              <button onClick={() => onEdit(item)} style={itemBtnStyle('#1a1a2e')}>
+                                <EditIcon sx={{ fontSize: 12 }} />
+                              </button>
+                              <button onClick={() => onDelete(item)} style={itemBtnStyle('#c62828')}>
+                                <DeleteIcon sx={{ fontSize: 12 }} />
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         {/* 위치 */}
@@ -130,6 +176,13 @@ const ScheduleTimeline = ({ timelineItems, isFreeDay, mainCount, selectedDate, i
                           <LocationOnIcon sx={{ fontSize: 13, color: '#ccc' }} />
                           {isKo ? item.locationKo : (item.locationJa ?? item.locationKo)}
                         </div>
+
+                        {/* 관리자 메모 (공유/나만보기) — 학생도 보는 위 공지와는 별개 */}
+                        {isAdmin && openAdminMemos[item.id] && (
+                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed #e6e2f0' }}>
+                            <MemoPanel targetType="schedule" targetDate={null} scheduleId={item.id} isKo={isKo} />
+                          </div>
+                        )}
 
                         {memoText && (
                           <>

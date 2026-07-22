@@ -62,6 +62,50 @@ CREATE TABLE schedules (
 );
 
 -- ---------------------------------------------
+-- 메모 (날짜/일정 기준, 개인/공유) — 관리자 전용
+-- ---------------------------------------------
+CREATE TABLE memos (
+  id               INT          NOT NULL AUTO_INCREMENT,
+  target_type      ENUM('date', 'schedule') NOT NULL COMMENT '날짜 기준 / 일정 기준',
+  target_date      DATE                  COMMENT 'target_type=date일 때만 사용',
+  schedule_id      INT                   COMMENT 'FK → schedules id, target_type=schedule일 때만 사용',
+  visibility       ENUM('private', 'shared') NOT NULL DEFAULT 'shared' COMMENT '개인용 / 전체공유',
+  author_admin_id  INT          NOT NULL COMMENT 'FK → admins id (작성자)',
+  created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_target_date (target_type, target_date),
+  INDEX idx_target_schedule (target_type, schedule_id),
+  CONSTRAINT fk_memos_schedule
+    FOREIGN KEY (schedule_id) REFERENCES schedules (id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_memos_author
+    FOREIGN KEY (author_admin_id) REFERENCES admins (id)
+    ON DELETE CASCADE,
+  CONSTRAINT chk_memo_target CHECK (
+    (target_type = 'date' AND target_date IS NOT NULL AND schedule_id IS NULL) OR
+    (target_type = 'schedule' AND schedule_id IS NOT NULL AND target_date IS NULL)
+  )
+);
+
+-- ---------------------------------------------
+-- 메모 블록 (텍스트/체크박스 항목, 순서 있음)
+-- ---------------------------------------------
+CREATE TABLE memo_blocks (
+  id           INT          NOT NULL AUTO_INCREMENT,
+  memo_id      INT          NOT NULL COMMENT 'FK → memos id',
+  type         ENUM('text', 'checkbox') NOT NULL COMMENT '블록 종류',
+  content      TEXT         NOT NULL COMMENT '블록 내용',
+  is_checked   TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '체크 여부 (checkbox 타입만 사용)',
+  sort_order   INT          NOT NULL DEFAULT 0 COMMENT '표시 순서',
+  PRIMARY KEY (id),
+  INDEX idx_memo (memo_id),
+  CONSTRAINT fk_blocks_memo
+    FOREIGN KEY (memo_id) REFERENCES memos (id)
+    ON DELETE CASCADE
+);
+
+-- ---------------------------------------------
 -- 기숙사 섹션 (층 or 카테고리)
 -- ---------------------------------------------
 CREATE TABLE dormitory_sections (
