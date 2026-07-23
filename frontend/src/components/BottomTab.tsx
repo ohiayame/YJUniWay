@@ -6,10 +6,10 @@ import GroupIcon from '@mui/icons-material/Group';
 import { useAppSelector } from '../hooks/useAppSelector';
 
 const TABS = [
-  { path: '/',          icon: HomeIcon,          label: '홈' },
-  { path: '/dormitory', icon: ApartmentIcon,      label: '기숙사' },
-  { path: '/schedule',  icon: CalendarMonthIcon,  label: '일정' },
-  { path: '/students',  icon: GroupIcon,          label: '명단', adminOnly: true },
+  { path: '/',          icon: HomeIcon,          label: 'home' },
+  { path: '/dormitory', icon: ApartmentIcon,      label: 'dormitory' },
+  { path: '/schedule',  icon: CalendarMonthIcon,  label: 'schedule' },
+  { path: '/students',  icon: GroupIcon,          label: 'students', adminOnly: true },
 ];
 
 export default function BottomTab() {
