@@ -4,6 +4,8 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import NotesIcon from '@mui/icons-material/Notes';
+import ExploreIcon from '@mui/icons-material/Explore';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import type { Schedule } from '../../../api/schedule';
 import { isRollCallItem, formatLabel } from '../utils';
 import MemoPanel from './memo/MemoPanel';
@@ -77,7 +79,7 @@ const ScheduleTimeline = ({ timelineItems, isFreeDay, mainCount, selectedDate, i
           display: 'flex', alignItems: 'center', gap: 14,
           marginBottom: 16,
         }}>
-          <span style={{ fontSize: 36, flexShrink: 0 }}>🗺️</span>
+          <ExploreIcon sx={{ fontSize: 36, color: '#2e7d32', flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: 15, fontWeight: 'bold', color: '#2e7d32' }}>
               {isKo ? '자유 탐방' : '自由散策'}
@@ -235,7 +237,7 @@ const ScheduleTimeline = ({ timelineItems, isFreeDay, mainCount, selectedDate, i
         </div>
       ) : !isFreeDay && (
         <div style={{ textAlign: 'center', color: '#ccc', fontSize: 13, marginTop: 60, lineHeight: 2 }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>📭</div>
+          <EventBusyIcon sx={{ fontSize: 28, color: '#ccc', marginBottom: 1 }} />
           {isKo ? '일정이 없습니다' : '予定はありません'}
         </div>
       )}

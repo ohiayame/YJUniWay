@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import TranslateIcon from '@mui/icons-material/Translate';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import { translateScheduleText } from '../../../api/schedule';
 import type { Schedule } from '../../../api/schedule';
 import { Overlay, ModalBox, ModalHeader } from '../../../components/ModalShell';
 
@@ -7,6 +10,14 @@ const inputStyle: React.CSSProperties = {
   border: '1.5px solid #e0e0e0', fontSize: 13, outline: 'none',
   boxSizing: 'border-box',
 };
+
+const translateBtnStyle = (disabled: boolean): React.CSSProperties => ({
+  width: 38, flexShrink: 0, borderRadius: 10,
+  border: '1.5px solid #e0e0e0', background: 'white',
+  color: disabled ? '#ccc' : '#1565c0',
+  cursor: disabled ? 'default' : 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+});
 
 // 입력 필드 컴포넌트 (레이블 + 입력창)
 const Field = ({ label, children, style }: { label: string; children: React.ReactNode; style?: React.CSSProperties }) => (
@@ -44,6 +55,25 @@ const ScheduleFormModal = ({
 
   const isEdit = !!initial;
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // 폼 직접 입력 중 필드별 "번역" 버튼 (관리자가 명시적으로 눌렀을 때만 해당 필드 하나만 번역)
+  const [translating, setTranslating] = useState<null | 'title' | 'location' | 'notes'>(null);
+  const translateField = async (field: 'title' | 'location' | 'notes') => {
+    const koKey = field === 'title' ? 'titleKo' : field === 'location' ? 'locationKo' : 'notesKo';
+    const jaKey = field === 'title' ? 'titleJa' : field === 'location' ? 'locationJa' : 'notesJa';
+    const koValue = form[koKey];
+    if (!koValue?.trim()) return;
+
+    setTranslating(field);
+    try {
+      const { translated } = await translateScheduleText(koValue);
+      set(jaKey, translated);
+    } catch {
+      // 번역 실패 시 조용히 무시, 관리자가 직접 입력 가능
+    } finally {
+      setTranslating(null);
+    }
+  };
 
   // DB 제약(NOT NULL): date, titleJa, locationKo — 백엔드에 DTO validation이 없어 누락 시 500이 나므로 폼에서 먼저 막음
   const canSubmit = form.date.trim().length > 0 && form.titleJa.trim().length > 0 && form.locationKo.trim().length > 0;
@@ -117,11 +147,37 @@ const ScheduleFormModal = ({
           <input style={inputStyle} value={form.titleJa} onChange={e => set('titleJa', e.target.value)} placeholder="オリエンテーション" />
         </Field>
         <Field label={isKo ? '일정명 (한국어)' : 'タイトル (韓国語)'}>
-          <input style={inputStyle} value={form.titleKo ?? ''} onChange={e => set('titleKo', e.target.value)} placeholder="오리엔테이션" />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input style={{ ...inputStyle, flex: 1 }} value={form.titleKo ?? ''} onChange={e => set('titleKo', e.target.value)} placeholder="오리엔테이션" />
+            <button
+              type="button"
+              onClick={() => translateField('title')}
+              disabled={!form.titleKo?.trim() || translating === 'title'}
+              style={translateBtnStyle(!form.titleKo?.trim() || translating === 'title')}
+              title={isKo ? '일본어로 번역' : '日本語に翻訳'}
+            >
+              {translating === 'title'
+                ? <HourglassEmptyIcon sx={{ fontSize: 16 }} />
+                : <TranslateIcon sx={{ fontSize: 16 }} />}
+            </button>
+          </div>
         </Field>
 
         <Field label={isKo ? '집합 장소 (한국어) *' : '集合場所 (韓国語) *'}>
-          <input style={inputStyle} value={form.locationKo} onChange={e => set('locationKo', e.target.value)} placeholder="대강당" />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input style={{ ...inputStyle, flex: 1 }} value={form.locationKo} onChange={e => set('locationKo', e.target.value)} placeholder="대강당" />
+            <button
+              type="button"
+              onClick={() => translateField('location')}
+              disabled={!form.locationKo?.trim() || translating === 'location'}
+              style={translateBtnStyle(!form.locationKo?.trim() || translating === 'location')}
+              title={isKo ? '일본어로 번역' : '日本語に翻訳'}
+            >
+              {translating === 'location'
+                ? <HourglassEmptyIcon sx={{ fontSize: 16 }} />
+                : <TranslateIcon sx={{ fontSize: 16 }} />}
+            </button>
+          </div>
         </Field>
         <Field label={isKo ? '집합 장소 (일본어)' : '集合場所 (日本語)'}>
           <input style={inputStyle} value={form.locationJa ?? ''} onChange={e => set('locationJa', e.target.value)} placeholder="大講堂" />
@@ -132,7 +188,20 @@ const ScheduleFormModal = ({
         </Field>
 
         <Field label={isKo ? '비고 (한국어)' : '備考 (韓国語)'}>
-          <input style={inputStyle} value={form.notesKo ?? ''} onChange={e => set('notesKo', e.target.value)} placeholder={isKo ? '우천 시 실내로 변경' : ''} />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input style={{ ...inputStyle, flex: 1 }} value={form.notesKo ?? ''} onChange={e => set('notesKo', e.target.value)} placeholder={isKo ? '우천 시 실내로 변경' : ''} />
+            <button
+              type="button"
+              onClick={() => translateField('notes')}
+              disabled={!form.notesKo?.trim() || translating === 'notes'}
+              style={translateBtnStyle(!form.notesKo?.trim() || translating === 'notes')}
+              title={isKo ? '일본어로 번역' : '日本語に翻訳'}
+            >
+              {translating === 'notes'
+                ? <HourglassEmptyIcon sx={{ fontSize: 16 }} />
+                : <TranslateIcon sx={{ fontSize: 16 }} />}
+            </button>
+          </div>
         </Field>
         <Field label={isKo ? '비고 (일본어)' : '備考 (日本語)'}>
           <input style={inputStyle} value={form.notesJa ?? ''} onChange={e => set('notesJa', e.target.value)} placeholder={isKo ? '' : '雨天時は室内に変更'} />
