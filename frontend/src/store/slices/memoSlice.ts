@@ -2,144 +2,180 @@
  * memoSlice.ts
  *
  * 일정 페이지의 관리자 메모(날짜 기준 / 일정 기준, 공유 / 나만보기) 상태.
- * 백엔드 memo/memo-block API가 아직 없어 지금은 mock/memoData.ts로 시드한 값을
- * 순수 클라이언트 상태로 관리합니다. API가 준비되면 이 슬라이스의 CRUD 리듀서를
- * 서버 호출(비동기 thunk)로 교체하되, 컴포넌트 쪽 인터페이스(Memo/MemoBlock 타입,
- * 액션 payload 모양)는 최대한 그대로 유지하는 것을 목표로 합니다.
+ * `frontend/src/api/memo.ts`를 통해 백엔드 memo/memo-block API와 통신하는 비동기 thunk로 구성됩니다.
  *
- * 대상당 문서 하나 규칙: (targetType, targetDate/scheduleId, visibility) 조합마다
- * memos row는 최대 1개만 존재하도록 addBlock에서 find-or-create로 보장합니다.
- * (개인 메모는 관리자별로 이미 분리되어 있으므로 author 구분을 추가로 두지 않음)
+ * 대상+visibility 조합(targetType, targetDate/scheduleId, private/shared)마다 캐시 엔트리를 하나 두고,
+ * 조회는 fetchMemosByTarget으로 채우고, 변경 계열 thunk(addMemoLine 등)는 매번 서버를 다시 조회하지 않고
+ * 각 API 응답(전체 갱신된 문서 또는 변경된 줄)으로 해당 엔트리만 직접 갱신합니다.
  */
 
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
-import { initialMemos, initialMemoBlocks, initialNextMemoId, initialNextBlockId } from '../../mock/memoData';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import {
+  getMemosByTarget,
+  addMemoBlock,
+  updateMemoBlockContent,
+  toggleMemoBlockChecked,
+  removeMemoDoc,
+} from '../../api/memo';
+import type {
+  MemoDto,
+  MemoBlockDto,
+  MemoTargetType,
+  MemoVisibility,
+  MemoBlockType,
+} from '../../api/memo';
 
-export type MemoTargetType = 'date' | 'schedule';
-export type MemoVisibility = 'private' | 'shared';
-export type MemoBlockType = 'text' | 'checkbox';
-
-export interface Memo {
-  id: number;
-  targetType: MemoTargetType;
-  targetDate: string | null;
-  scheduleId: number | null;
-  visibility: MemoVisibility;
-  authorName: string; // 임시: 실제 연동 시 author_admin_id 기준으로 관리자 테이블과 조인
-  createdAt: string;  // ISO
-}
-
-export interface MemoBlock {
-  id: number;
-  memoId: number;
-  type: MemoBlockType;
-  content: string;
-  isChecked: boolean;
-  sortOrder: number;
-}
+export type { MemoTargetType, MemoVisibility, MemoBlockType };
+export type Memo = MemoDto;
+export type MemoBlock = MemoBlockDto;
 
 interface MemoTarget {
   targetType: MemoTargetType;
   targetDate: string | null;
   scheduleId: number | null;
-  visibility: MemoVisibility;
+}
+
+type LoadStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
+
+interface MemoTargetEntry {
+  shared: Memo | null;
+  private: Memo | null;
+  status: LoadStatus;
 }
 
 interface MemoState {
-  memos: Memo[];
-  blocks: MemoBlock[];
-  nextMemoId: number;
-  nextBlockId: number;
+  byTarget: Record<string, MemoTargetEntry>;
 }
 
-const initialState: MemoState = {
-  memos: initialMemos,
-  blocks: initialMemoBlocks,
-  nextMemoId: initialNextMemoId,
-  nextBlockId: initialNextBlockId,
-};
+const initialState: MemoState = { byTarget: {} };
 
-function matchesTarget(memo: Memo, target: MemoTarget): boolean {
-  return memo.targetType === target.targetType
-    && memo.targetDate === target.targetDate
-    && memo.scheduleId === target.scheduleId
-    && memo.visibility === target.visibility;
+function targetKey(target: MemoTarget): string {
+  return `${target.targetType}:${target.targetDate ?? ''}:${target.scheduleId ?? ''}`;
 }
 
-function removeBlockAndEmptyMemo(state: MemoState, blockId: number) {
-  const block = state.blocks.find((b) => b.id === blockId);
-  if (!block) return;
-  state.blocks = state.blocks.filter((b) => b.id !== blockId);
-  const hasMoreBlocks = state.blocks.some((b) => b.memoId === block.memoId);
-  if (!hasMoreBlocks) {
-    state.memos = state.memos.filter((m) => m.id !== block.memoId);
-  }
+function emptyEntry(): MemoTargetEntry {
+  return { shared: null, private: null, status: 'idle' };
 }
+
+// 대상(날짜/일정)의 공유+개인 메모를 함께 조회
+export const fetchMemosByTarget = createAsyncThunk(
+  'memo/fetchByTarget',
+  async (target: MemoTarget) => ({ target, res: await getMemosByTarget(target) }),
+);
+
+// 줄 추가 — 대상 문서가 없으면 서버에서 새로 생성됨(find-or-create)
+export const addMemoLine = createAsyncThunk(
+  'memo/addLine',
+  async (payload: MemoTarget & {
+    visibility: MemoVisibility;
+    type: MemoBlockType;
+    content: string;
+    insertAfterBlockId?: number | null;
+  }) => {
+    const { visibility, type, content, insertAfterBlockId, ...target } = payload;
+    const memo = await addMemoBlock({ ...target, visibility, type, content, insertAfterBlockId });
+    return { target, visibility, memo };
+  },
+);
+
+// 줄 내용 수정 — 비우면 서버에서 자동 삭제(문서가 비면 문서도 함께 삭제)
+export const editMemoLine = createAsyncThunk(
+  'memo/editLine',
+  async (payload: MemoTarget & { visibility: MemoVisibility; blockId: number; content: string }) => {
+    const { visibility, blockId, content, ...target } = payload;
+    const result = await updateMemoBlockContent(blockId, content);
+    return { target, visibility, blockId, result };
+  },
+);
+
+export const toggleMemoLine = createAsyncThunk(
+  'memo/toggleLine',
+  async (payload: MemoTarget & { visibility: MemoVisibility; blockId: number }) => {
+    const { visibility, blockId, ...target } = payload;
+    const block = await toggleMemoBlockChecked(blockId);
+    return { target, visibility, block };
+  },
+);
+
+// 문서 전체 삭제 (작성자 본인 또는 교수만 호출 가능하도록 컴포넌트에서 버튼 노출을 제한)
+export const removeMemoDocThunk = createAsyncThunk(
+  'memo/removeDoc',
+  async (payload: MemoTarget & { visibility: MemoVisibility; memoId: number }) => {
+    const { visibility, memoId, ...target } = payload;
+    await removeMemoDoc(memoId);
+    return { target, visibility, memoId };
+  },
+);
 
 const memoSlice = createSlice({
   name: 'memo',
   initialState,
-  reducers: {
-    // 줄 추가 — 대상 문서가 없으면 새로 만들고(find-or-create), insertAfterBlockId 뒤에 끼워 넣음(없으면 맨 끝)
-    addBlock(state, action: PayloadAction<MemoTarget & {
-      authorName: string;
-      type: MemoBlockType;
-      content: string;
-      insertAfterBlockId?: number | null;
-    }>) {
-      const { authorName, type, content, insertAfterBlockId, ...target } = action.payload;
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchMemosByTarget.pending, (state, action) => {
+        const key = targetKey(action.meta.arg);
+        const entry = state.byTarget[key] ?? emptyEntry();
+        entry.status = 'loading';
+        state.byTarget[key] = entry;
+      })
+      .addCase(fetchMemosByTarget.fulfilled, (state, action) => {
+        const key = targetKey(action.payload.target);
+        state.byTarget[key] = {
+          shared: action.payload.res.shared,
+          private: action.payload.res.private,
+          status: 'succeeded',
+        };
+      })
+      .addCase(fetchMemosByTarget.rejected, (state, action) => {
+        const key = targetKey(action.meta.arg);
+        const entry = state.byTarget[key] ?? emptyEntry();
+        entry.status = 'failed';
+        state.byTarget[key] = entry;
+      })
 
-      let memo = state.memos.find((m) => matchesTarget(m, target));
-      if (!memo) {
-        memo = { id: state.nextMemoId, ...target, authorName, createdAt: new Date().toISOString() };
-        state.nextMemoId += 1;
-        state.memos.push(memo);
-      }
-      const memoId = memo.id;
+      .addCase(addMemoLine.fulfilled, (state, action) => {
+        const { target, visibility, memo } = action.payload;
+        const key = targetKey(target);
+        const entry = state.byTarget[key] ?? emptyEntry();
+        entry[visibility] = memo;
+        entry.status = 'succeeded';
+        state.byTarget[key] = entry;
+      })
 
-      const siblingIds = state.blocks
-        .filter((b) => b.memoId === memoId)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((b) => b.id);
+      .addCase(editMemoLine.fulfilled, (state, action) => {
+        const { target, visibility, blockId, result } = action.payload;
+        const entry = state.byTarget[targetKey(target)];
+        const memo = entry?.[visibility];
+        if (!entry || !memo) return;
 
-      const newBlockId = state.nextBlockId;
-      state.nextBlockId += 1;
+        if (result.deleted) {
+          if (result.memoDeleted) {
+            entry[visibility] = null;
+          } else {
+            memo.blocks = memo.blocks.filter((b) => b.id !== blockId);
+          }
+        } else if (result.block) {
+          const block = memo.blocks.find((b) => b.id === blockId);
+          if (block) Object.assign(block, result.block);
+        }
+      })
 
-      const insertIndex = insertAfterBlockId ? siblingIds.indexOf(insertAfterBlockId) + 1 : siblingIds.length;
-      siblingIds.splice(insertIndex, 0, newBlockId);
+      .addCase(toggleMemoLine.fulfilled, (state, action) => {
+        const { target, visibility, block } = action.payload;
+        const memo = state.byTarget[targetKey(target)]?.[visibility];
+        const existing = memo?.blocks.find((b) => b.id === block.id);
+        if (existing) Object.assign(existing, block);
+      })
 
-      state.blocks.push({ id: newBlockId, memoId, type, content, isChecked: false, sortOrder: 0 });
-      state.blocks.forEach((b) => {
-        if (b.memoId === memoId) b.sortOrder = siblingIds.indexOf(b.id);
+      .addCase(removeMemoDocThunk.fulfilled, (state, action) => {
+        const { target, visibility } = action.payload;
+        const entry = state.byTarget[targetKey(target)];
+        if (entry) entry[visibility] = null;
       });
-    },
-
-    // 줄 내용 수정 — 비우면(trim 결과 빈 문자열) 그 줄을 삭제 (문서가 비면 문서도 함께 삭제)
-    updateBlockContent(state, action: PayloadAction<{ blockId: number; content: string }>) {
-      const trimmed = action.payload.content.trim();
-      if (!trimmed) {
-        removeBlockAndEmptyMemo(state, action.payload.blockId);
-        return;
-      }
-      const block = state.blocks.find((b) => b.id === action.payload.blockId);
-      if (block) block.content = trimmed;
-    },
-
-    toggleBlockChecked(state, action: PayloadAction<{ blockId: number }>) {
-      const block = state.blocks.find((b) => b.id === action.payload.blockId);
-      if (block) block.isChecked = !block.isChecked;
-    },
-
-    // 문서 전체 삭제 (작성자 본인 또는 교수만 호출 가능하도록 컴포넌트에서 버튼 노출을 제한)
-    removeMemo(state, action: PayloadAction<{ memoId: number }>) {
-      state.memos = state.memos.filter((m) => m.id !== action.payload.memoId);
-      state.blocks = state.blocks.filter((b) => b.memoId !== action.payload.memoId);
-    },
   },
 });
 
-export const { addBlock, updateBlockContent, toggleBlockChecked, removeMemo } = memoSlice.actions;
 export default memoSlice.reducer;
 
 // ─── 셀렉터 헬퍼 ────────────────────────────────────────────────────────────
@@ -147,19 +183,29 @@ interface MemoRootState {
   memo: MemoState;
 }
 
-export const selectMemo = (state: MemoRootState, target: MemoTarget): Memo | undefined =>
-  state.memo.memos.find((m) => matchesTarget(m, target));
+export const selectMemo = (
+  state: MemoRootState,
+  target: MemoTarget & { visibility: MemoVisibility },
+): Memo | undefined => state.memo.byTarget[targetKey(target)]?.[target.visibility] ?? undefined;
+
+export const selectMemoStatus = (state: MemoRootState, target: MemoTarget): LoadStatus =>
+  state.memo.byTarget[targetKey(target)]?.status ?? 'idle';
+
+function findMemoById(state: MemoState, memoId: number | undefined): Memo | undefined {
+  if (memoId === undefined) return undefined;
+  for (const entry of Object.values(state.byTarget)) {
+    if (entry.shared?.id === memoId) return entry.shared;
+    if (entry.private?.id === memoId) return entry.private;
+  }
+  return undefined;
+}
 
 const EMPTY_BLOCKS: MemoBlock[] = [];
 
 export const selectBlocks = (state: MemoRootState, memoId: number | undefined): MemoBlock[] =>
-  memoId === undefined
-    ? EMPTY_BLOCKS
-    : state.memo.blocks.filter((b) => b.memoId === memoId).sort((a, b) => a.sortOrder - b.sortOrder);
+  findMemoById(state.memo, memoId)?.blocks ?? EMPTY_BLOCKS;
 
 // 배지처럼 개수만 필요한 곳에서 쓰는 셀렉터 — 숫자를 반환하므로 매번 새 배열을 만드는 selectBlocks와 달리
 // react-redux의 참조 비교 경고 없이 안전하게 useAppSelector에 바로 쓸 수 있음
 export const selectBlockCount = (state: MemoRootState, memoId: number | undefined): number =>
-  memoId === undefined ? 0 : state.memo.blocks.reduce((count, b) => (b.memoId === memoId ? count + 1 : count), 0);
-
-export const selectNextBlockId = (state: MemoRootState): number => state.memo.nextBlockId;
+  findMemoById(state.memo, memoId)?.blocks.length ?? 0;

@@ -64,7 +64,7 @@ const MemoBlockRow = ({
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
-          {block.isChecked && <CheckIcon sx={{ fontSize: 11, color: 'white' }} />}
+          {block.isChecked ? <CheckIcon sx={{ fontSize: 11, color: 'white' }} /> : null}
         </button>
       )}
 

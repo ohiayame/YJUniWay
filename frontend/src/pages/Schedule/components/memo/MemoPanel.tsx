@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import GroupIcon from '@mui/icons-material/Group';
 import LockIcon from '@mui/icons-material/Lock';
+import { useAppDispatch } from '../../../../store';
+import { fetchMemosByTarget } from '../../../../store/slices/memoSlice';
 import type { MemoTargetType, MemoVisibility } from '../../../../store/slices/memoSlice';
 import MemoDoc from './MemoDoc';
 
@@ -23,6 +25,12 @@ interface MemoPanelProps {
 // 날짜 기준(targetDate)과 일정 기준(scheduleId) 어느 쪽이든 이 컴포넌트 하나로 처리
 const MemoPanel = ({ targetType, targetDate, scheduleId, isKo }: MemoPanelProps) => {
   const [tab, setTab] = useState<MemoVisibility>('shared');
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(fetchMemosByTarget({ targetType, targetDate, scheduleId }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetType, targetDate, scheduleId]);
 
   return (
     <div>

@@ -105,6 +105,64 @@ INSERT INTO schedules (id, date, time_start, time_end, title_ko, title_ja, locat
 (33, '2026-04-20', '09:00', NULL, '공항 이동 · 귀국', '空港移動・帰国', '정문 버스 정류장', '正門バス停', '김교수', '짐 미리 준비', '荷物は事前に準備');
 
 -- ─────────────────────────────────────────────────────────────
+-- memos / memo_blocks
+-- target_type: 'date' | 'schedule' (target_date/schedule_id 중 하나만 사용)
+-- visibility: 'private' | 'shared'
+-- author_admin_id: 1=김철수(professor), 2=이영희(staff), 3=박민준(staff)
+-- ─────────────────────────────────────────────────────────────
+TRUNCATE TABLE memo_blocks;
+TRUNCATE TABLE memos;
+
+INSERT INTO memos (id, target_type, target_date, schedule_id, visibility, author_admin_id) VALUES
+(1, 'date',     '2026-04-07', NULL, 'shared',  1),  -- 입국일 전체 공유
+(2, 'schedule', NULL,         1,    'shared',  2),  -- 공항 픽업
+(3, 'schedule', NULL,         10,   'private', 1),  -- 전통 문화 체험 (한복 사이즈)
+(4, 'date',     '2026-04-10', NULL, 'shared',  2),  -- 강의실 변경 공지 관련
+(5, 'schedule', NULL,         14,   'shared',  1),  -- 경주 불국사 견학
+(6, 'date',     '2026-04-14', NULL, 'private', 3),  -- 요리 체험 재료 준비
+(7, 'schedule', NULL,         29,   'shared',  1),  -- 수료식
+(8, 'date',     '2026-04-20', NULL, 'shared',  2);  -- 귀국일
+
+INSERT INTO memo_blocks (memo_id, type, content, is_checked, sort_order) VALUES
+-- memo 1: 입국일 (2026-04-07)
+(1, 'text',     '입국 첫날 전체 일정 공유 — 지연 시 학생 카톡방에 공지', 0, 1),
+(1, 'checkbox', '공항 픽업 차량 2대 배차 확인',                          1, 2),
+(1, 'checkbox', '환영 만찬 좌석표 준비',                                 0, 3),
+(1, 'checkbox', '오리엔테이션 자료 인쇄 (7부)',                          0, 4),
+
+-- memo 2: 공항 픽업 (schedule_id = 1)
+(2, 'text',     '인천/대구 도착편 시간이 달라 픽업 조 2팀으로 분리',     0, 1),
+(2, 'checkbox', '피켓 준비 (학생 이름)',                                 1, 2),
+(2, 'checkbox', '미니버스 기사님 연락처 재확인',                        0, 3),
+
+-- memo 3: 전통 문화 체험 (schedule_id = 10, private)
+(3, 'text',     '한복 대여 사이즈 — 다나카(L), 야마다(S), 사토(L), 스즈키(M)', 0, 1),
+(3, 'checkbox', '대여점에 사이즈표 전달',                                1, 2),
+
+-- memo 4: 강의실 변경 공지 (2026-04-10)
+(4, 'text',     '한국어 수업 강의실 변경 공지와 동일 — 메인 화면 공지 참고', 0, 1),
+(4, 'checkbox', '학생들에게 강의실 변경 재안내 (단체 메시지)',           0, 2),
+
+-- memo 5: 경주 불국사 견학 (schedule_id = 14)
+(5, 'text',     '버스 1대 45인승, 현재 인원 7명 + 인솔 2명 — 여유 있음', 0, 1),
+(5, 'checkbox', '도시락 수량 확인 (9개)',                                1, 2),
+(5, 'checkbox', '우천 시 일정 대체안 공지',                              0, 3),
+
+-- memo 6: 요리 체험 재료 준비 (2026-04-14, private)
+(6, 'text',     '비빔밥 재료 장보기 — 콩나물, 고사리, 계란, 고추장 (7인분 기준)', 0, 1),
+(6, 'checkbox', '생활관 조리실 예약 확인',                               1, 2),
+
+-- memo 7: 수료식 (schedule_id = 29)
+(7, 'text',     '수료증 7부 출력 + 케이스 준비',                         0, 1),
+(7, 'checkbox', '정장 착용 안내 재공지',                                 0, 2),
+(7, 'checkbox', '사진 촬영 담당자 배정',                                 0, 3),
+
+-- memo 8: 귀국일 (2026-04-20)
+(8, 'text',     '귀국일 — 짐 분실 방지 위해 방별 최종 점검 필요',        0, 1),
+(8, 'checkbox', '여권/항공권 소지 확인',                                 0, 2),
+(8, 'checkbox', '기숙사 열쇠 회수',                                      0, 3);
+
+-- ─────────────────────────────────────────────────────────────
 -- dormitory_sections
 -- type: 'floor' | 'category'
 -- section_key: floor는 층 이름, category는 신규 부여 (trash / rules)

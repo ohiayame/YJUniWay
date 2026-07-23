@@ -3,7 +3,7 @@ import { shallowEqual } from 'react-redux';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAppDispatch, useAppSelector } from '../../../../store';
 import {
-  addBlock, updateBlockContent, toggleBlockChecked, removeMemo,
+  addMemoLine, editMemoLine, toggleMemoLine, removeMemoDocThunk,
   selectMemo, selectBlocks,
 } from '../../../../store/slices/memoSlice';
 import type { MemoTargetType, MemoVisibility, MemoBlockType } from '../../../../store/slices/memoSlice';
@@ -23,25 +23,27 @@ interface MemoDocProps {
 }
 
 // 문서 하나(공유 1개 또는 나만보기 1개)의 헤더 + 줄 목록 + 입력줄 관리
+// 대상 데이터 자체의 조회(fetchMemosByTarget)는 부모(MemoPanel/ScheduleMemoBadge)에서 트리거하며,
+// 이 컴포넌트는 스토어에 이미 채워진 데이터만 읽어서 렌더링/변경 요청만 담당한다.
 const MemoDoc = ({ targetType, targetDate, scheduleId, visibility, isKo, emptyHint }: MemoDocProps) => {
   const dispatch = useAppDispatch();
-  const { name, role } = useAppSelector((state) => state.auth);
-  const target = { targetType, targetDate, scheduleId, visibility };
-  const memo = useAppSelector((state) => selectMemo(state, target));
+  const { id: currentAdminId, role } = useAppSelector((state) => state.auth);
+  const target = { targetType, targetDate, scheduleId };
+  const memo = useAppSelector((state) => selectMemo(state, { ...target, visibility }));
   const blocks = useAppSelector((state) => selectBlocks(state, memo?.id), shallowEqual);
-  const nextBlockId = useAppSelector((state) => state.memo.nextBlockId);
 
   const [draft, setDraft] = useState<Draft>(null);
   // 줄이 하나도 없으면(처음이거나, 다 지워져서 다시 비었거나) 항상 입력줄이 열려있어야 함 — 렌더 중 파생
   const effectiveDraft: Draft = blocks.length === 0 ? { afterId: null } : draft;
 
-  // 임시: 실제 author_admin_id 연동 전까지는 로그인 이름으로 "작성자 본인" 여부를 판단
-  const authorName = name ?? (isKo ? '관리자' : '管理者');
-  const canDeleteAll = !!memo && (role === 'professor' || memo.authorName === authorName);
+  const canDeleteAll = !!memo && (role === 'professor' || memo.authorAdminId === currentAdminId);
 
-  const commitLine = (type: MemoBlockType, content: string, insertAfterBlockId: number | null) => {
-    dispatch(addBlock({ ...target, authorName, type, content, insertAfterBlockId }));
-    setDraft({ afterId: nextBlockId });
+  const commitLine = async (type: MemoBlockType, content: string, insertAfterBlockId: number | null) => {
+    const { memo: updated } = await dispatch(
+      addMemoLine({ ...target, visibility, type, content, insertAfterBlockId }),
+    ).unwrap();
+    const newBlockId = Math.max(...updated.blocks.map((b) => b.id));
+    setDraft({ afterId: newBlockId });
   };
 
   return (
@@ -54,12 +56,15 @@ const MemoDoc = ({ targetType, targetDate, scheduleId, visibility, isKo, emptyHi
           <span style={{ fontSize: 10.5, fontWeight: 700, color: '#a29fc0' }}>
             {visibility === 'private'
               ? (isKo ? '내 메모' : '自分のメモ')
-              : (isKo ? `${memo.authorName}님이 시작` : `${memo.authorName}さんが開始`)}
+              : (isKo ? '공유 메모' : '共有メモ')}
           </span>
           {canDeleteAll && (
             <button
               type="button"
-              onClick={() => { dispatch(removeMemo({ memoId: memo.id })); setDraft(null); }}
+              onClick={() => {
+                dispatch(removeMemoDocThunk({ ...target, visibility, memoId: memo.id }));
+                setDraft(null);
+              }}
               style={{
                 border: 'none', background: 'transparent', color: '#c9a3a3',
                 fontSize: 10.5, fontWeight: 700, cursor: 'pointer',
@@ -77,8 +82,8 @@ const MemoDoc = ({ targetType, targetDate, scheduleId, visibility, isKo, emptyHi
         <div key={block.id}>
           <MemoBlockRow
             block={block}
-            onToggleCheck={() => dispatch(toggleBlockChecked({ blockId: block.id }))}
-            onCommitEdit={(content) => dispatch(updateBlockContent({ blockId: block.id, content }))}
+            onToggleCheck={() => dispatch(toggleMemoLine({ ...target, visibility, blockId: block.id }))}
+            onCommitEdit={(content) => dispatch(editMemoLine({ ...target, visibility, blockId: block.id, content }))}
             onEnterAfter={() => setDraft({ afterId: block.id })}
           />
           {effectiveDraft?.afterId === block.id && (
