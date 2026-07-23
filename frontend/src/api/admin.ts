@@ -31,6 +31,7 @@ export interface LoginResponse {
   accessToken: string;
   role: 'professor' | 'staff';
   name: string;
+  id: number;
 }
 
 // ──────────────────────────────────────────────

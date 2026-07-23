@@ -25,7 +25,7 @@ export class AdminService {
   async login(
     identifier: string,
     password: string,
-  ): Promise<{ accessToken: string; role: AdminRole; name: string }> {
+  ): Promise<{ accessToken: string; role: AdminRole; name: string; id: number }> {
     // 교수는 이름으로, 스태프는 학번으로 로그인
     const byStudentId = await this.adminRepo.findOne({ where: { studentId: identifier } });
     const admin =
@@ -48,6 +48,7 @@ export class AdminService {
       accessToken: this.jwtService.sign(payload),
       role: admin.role,
       name: admin.name,
+      id: admin.id,
     };
   }
 

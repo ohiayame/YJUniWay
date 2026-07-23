@@ -17,13 +17,13 @@ const AdminPage = () => {
     return <AdminDashboard name={name} role={role} onLogout={() => dispatch(clearAdmin())} />;
   }
 
-  return <LoginForm onLogin={(name, role) => dispatch(setAdmin({ name, role }))} />;
+  return <LoginForm onLogin={(name, role, id) => dispatch(setAdmin({ name, role, id }))} />;
 };
 
 /* ─── 로그인 폼 ─── */
 
 const LoginForm = ({ onLogin }: {
-  onLogin: (name: string, role: 'professor' | 'staff') => void;
+  onLogin: (name: string, role: 'professor' | 'staff', id: number) => void;
 }) => {
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +39,7 @@ const LoginForm = ({ onLogin }: {
       const res = await login({ studentId, password });
       // JWT 토큰 저장 (apiClient 인터셉터가 이 키를 사용)
       localStorage.setItem('token', res.accessToken);
-      onLogin(res.name, res.role);
+      onLogin(res.name, res.role, res.id);
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message ?? '로그인에 실패했습니다.');
