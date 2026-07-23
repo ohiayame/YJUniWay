@@ -152,6 +152,9 @@ CREATE TABLE app_settings (
   school_address_ja VARCHAR(255)         COMMENT '학교 주소 (일본어)',
   notice_ko        TEXT                  COMMENT '메인 공지/주의사항 (한국어)',
   notice_ja        TEXT                  COMMENT '메인 공지/주의사항 (일본어)',
+  gathering_time          TIME          COMMENT '다음 집합 시간 (홈 화면 "내일 집합" 카드용)',
+  gathering_location_ko   VARCHAR(255)  COMMENT '집합 장소 (한국어)',
+  gathering_location_ja   VARCHAR(255)  COMMENT '집합 장소 (일본어)',
   updated_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT chk_single_row CHECK (id = 1)

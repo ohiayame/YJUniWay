@@ -222,7 +222,7 @@ INSERT INTO dormitory_items (section_id, text_ko, text_ja, warning_ko, warning_j
 -- ─────────────────────────────────────────────────────────────
 DELETE FROM app_settings;
 
-INSERT INTO app_settings (id, curfew_time, wifi_ssid, wifi_password, school_address_ko, school_address_ja, notice_ko, notice_ja) VALUES
+INSERT INTO app_settings (id, curfew_time, wifi_ssid, wifi_password, school_address_ko, school_address_ja, notice_ko, notice_ja, gathering_time, gathering_location_ko, gathering_location_ja) VALUES
 (1,
  '22:00',
  'YJU_Guest',
@@ -230,7 +230,10 @@ INSERT INTO app_settings (id, curfew_time, wifi_ssid, wifi_password, school_addr
  '대구광역시 북구 영진로 20',
  '大邱広域市北区ヨンジン路20',
  '4월 10일(목) 한국어 수업은 강의실 변경 — 본관 203호로 이동합니다.',
- '4月10日(木)の韓国語授業は教室変更 — 本館203号室に移動します。');
+ '4月10日(木)の韓国語授業は教室変更 — 本館203号室に移動します。',
+ '09:00',
+ '정문 앞',
+ '正門前');
 
 -- ─────────────────────────────────────────────────────────────
 -- emergency_contacts

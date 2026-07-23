@@ -34,6 +34,23 @@ export class AppSettings {
   @Column({ name: 'notice_ja', type: 'text', nullable: true })
   noticeJa: string | null;
 
+  @Column({
+    name: 'gathering_time',
+    type: 'time',
+    nullable: true,
+    transformer: {
+      to: (v: string | null) => v,
+      from: (v: string | null) => v?.slice(0, 5) ?? null,
+    },
+  })
+  gatheringTime: string | null;
+
+  @Column({ name: 'gathering_location_ko', type: 'varchar', length: 255, nullable: true })
+  gatheringLocationKo: string | null;
+
+  @Column({ name: 'gathering_location_ja', type: 'varchar', length: 255, nullable: true })
+  gatheringLocationJa: string | null;
+
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

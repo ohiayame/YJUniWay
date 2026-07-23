@@ -1,18 +1,21 @@
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import InboxIcon from '@mui/icons-material/Inbox';
-import type { Schedule } from '../../../api/schedule';
+import type { AppSettings } from '../../../api/settings';
 import SectionLabel from './SectionLabel';
 
 interface TomorrowGatheringCardProps {
-  tomorrowGathering: Schedule | null;
+  settings: AppSettings | null;
   isKo: boolean;
 }
 
-// 내일 집합 시간 및 장소 카드
-const TomorrowGatheringCard = ({ tomorrowGathering, isKo }: TomorrowGatheringCardProps) => (
+// 내일 집합 시간 및 장소 카드 — 관리자가 app_settings에 직접 등록한 집합 공지를 표시
+const TomorrowGatheringCard = ({ settings, isKo }: TomorrowGatheringCardProps) => {
+  const hasGathering = !!settings?.gatheringTime;
+
+  return (
   <>
     <SectionLabel>{isKo ? '내일 집합' : '明日の集合'}</SectionLabel>
-    {tomorrowGathering ? (
+    {hasGathering ? (
       <div style={{
         background: '#FFF5EC',
         borderRadius: 14,
@@ -26,11 +29,11 @@ const TomorrowGatheringCard = ({ tomorrowGathering, isKo }: TomorrowGatheringCar
         <div>
           {/* 장소 */}
           <div style={{ fontSize: 15, fontWeight: 'bold', color: '#111' }}>
-            {isKo ? tomorrowGathering.locationKo : tomorrowGathering.locationJa}
+            {isKo ? settings?.gatheringLocationKo : settings?.gatheringLocationJa}
           </div>
           {/* 시간 */}
           <div style={{ fontSize: 14, color: '#383838', marginTop: 2 }}>
-            {tomorrowGathering.timeStart} {isKo ? '집합' : '集合'}
+            {settings?.gatheringTime} {isKo ? '집합' : '集合'}
           </div>
         </div>
       </div>
@@ -52,6 +55,7 @@ const TomorrowGatheringCard = ({ tomorrowGathering, isKo }: TomorrowGatheringCar
       </div>
     )}
   </>
-);
+  );
+};
 
 export default TomorrowGatheringCard;

@@ -21,6 +21,9 @@ export interface AppSettings {
   schoolAddressJa: string | null;
   noticeKo: string | null;
   noticeJa: string | null;
+  gatheringTime: string | null;      // 'HH:MM' — 다음 집합 시간
+  gatheringLocationKo: string | null;
+  gatheringLocationJa: string | null;
   updatedAt: string;
 }
 
