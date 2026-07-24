@@ -22,7 +22,7 @@ const TodayScheduleCard = ({ todaySchedules, isKo }: TodayScheduleCardProps) => 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#27ae60', flexShrink: 0 }} />
           <span style={{ fontSize: 14, color: 'white' }}>
-            {isKo ? '자유 탐방' : '自由探索'}
+            {isKo ? '없음' : 'なし'} — {isKo ? '(자유 탐방)' : '(自由探訪)'}
           </span>
         </div>
       ) : todaySchedules.length === 1 ? (

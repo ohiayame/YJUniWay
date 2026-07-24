@@ -136,7 +136,7 @@ const AdminListPage = () => {
               {nextApproved ? '승인하시겠습니까?' : '승인을 해제하시겠습니까?'}
             </div>
             <div style={{ fontSize: 12, color: '#aaa', marginBottom: 24 }}>
-              {target.name} ({target.student_id})
+              {target.name} ({target.studentId})
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
@@ -206,7 +206,7 @@ const AdminRow = ({ admin, isLast, onToggle }: {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 'bold', color: '#111' }}>{admin.name}</div>
         <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
-          {admin.studentId ? `학번: ${admin.studentId}` : '교수'}
+          {admin.studentId ? `학번: ${admin.studentId}` : '교수님'}
           {' · '}{admin.phone}
         </div>
       </div>
@@ -242,7 +242,7 @@ const AdminRow = ({ admin, isLast, onToggle }: {
           background: '#e3f2fd', borderRadius: 20,
           padding: '3px 10px', flexShrink: 0,
         }}>
-          교수
+          교수님
         </div>
       )}
     </div>

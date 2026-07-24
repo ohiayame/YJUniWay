@@ -23,7 +23,7 @@ export interface Student {
   notes: string | null;
 }
 
-/** AI 파싱 결과 (id 없음) */
+/** AI 파싱 결과 (id 없음) nameJa/nameKo/nameEn/gender/roomNumber/notes */
 export type ParsedStudent = Omit<Student, 'id'>;
 
 export interface RollCall {

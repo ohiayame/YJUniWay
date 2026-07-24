@@ -20,7 +20,7 @@ import ContactDeleteConfirmModal from './components/ContactDeleteConfirmModal';
 
 // 오늘/내일 날짜를 'YYYY-MM-DD' 형식으로 반환
 const getDateString = (offsetDays: number): string => {
-  const d = new Date('2026-08-05'); // 기준 날짜를 2026-04-07로 설정
+  const d = new Date();
   d.setDate(d.getDate() + offsetDays);
   return d.toISOString().slice(0, 10);
 };

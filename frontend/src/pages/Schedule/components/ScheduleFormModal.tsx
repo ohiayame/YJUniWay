@@ -27,7 +27,8 @@ const Field = ({ label, children, style }: { label: string; children: React.Reac
   </div>
 );
 
-type ScheduleForm = Omit<Schedule, 'id'>;
+// date/titleJa/locationKo는 set()이 항상 문자열로만 채우도록 강제하므로(NOT NULL 필드) null을 제외
+type ScheduleForm = Omit<Schedule, 'id' | 'locationKo'> & { locationKo: string };
 
 // 일정 추가/수정 모달
 const ScheduleFormModal = ({

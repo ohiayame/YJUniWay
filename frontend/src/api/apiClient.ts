@@ -58,6 +58,7 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
+      localStorage.removeItem('adminAuth');
       window.location.href = '/admin';
     }
     return Promise.reject(error);
@@ -86,6 +87,10 @@ const apiClient = {
   /** PUT 요청: 기존 데이터 수정 (전체 교체) */
   put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> =>
     axiosInstance.put<T>(url, data, config).then((res) => res.data),
+
+  /** PATCH 요청: 기존 데이터 일부 수정 */
+  patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> =>
+    axiosInstance.patch<T>(url, data, config).then((res) => res.data),
 
   /** DELETE 요청: 데이터 삭제 */
   delete: <T>(url: string, config?: AxiosRequestConfig): Promise<T> =>
