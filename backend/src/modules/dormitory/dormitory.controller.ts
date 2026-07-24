@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { DormitoryService } from './dormitory.service';
@@ -86,5 +87,19 @@ export class DormitoryController {
   @ApiOperation({ summary: '항목 삭제' })
   removeItem(@Param('id') id: string) {
     return this.dormitoryService.removeItem(+id);
+  }
+
+  @Post('translate')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: '단일 텍스트 한→일 번역 (폼 필드별 "번역" 버튼 전용)',
+  })
+  async translate(@Body() body: { text: string }) {
+    if (!body.text?.trim()) {
+      throw new BadRequestException('번역할 텍스트가 없습니다.');
+    }
+    const translated = await this.dormitoryService.translateText(body.text);
+    return { translated };
   }
 }

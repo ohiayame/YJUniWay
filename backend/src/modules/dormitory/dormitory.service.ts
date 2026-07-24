@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DormitorySection, SectionType } from './dormitory-section.entity';
 import { DormitoryItem } from './dormitory-item.entity';
+import { translateKoToJa } from '../../utils/translate.util';
 
 @Injectable()
 export class DormitoryService {
@@ -32,7 +33,10 @@ export class DormitoryService {
   }
 
   async findSection(id: number): Promise<DormitorySection> {
-    const section = await this.sectionRepo.findOne({ where: { id }, relations: ['items'] });
+    const section = await this.sectionRepo.findOne({
+      where: { id },
+      relations: ['items'],
+    });
     if (!section) throw new NotFoundException('섹션을 찾을 수 없습니다.');
     return section;
   }
@@ -41,7 +45,10 @@ export class DormitoryService {
     return this.sectionRepo.save(this.sectionRepo.create(data));
   }
 
-  async updateSection(id: number, data: Partial<DormitorySection>): Promise<DormitorySection> {
+  async updateSection(
+    id: number,
+    data: Partial<DormitorySection>,
+  ): Promise<DormitorySection> {
     const section = await this.findSection(id);
     Object.assign(section, data);
     return this.sectionRepo.save(section);
@@ -57,7 +64,10 @@ export class DormitoryService {
     return this.itemRepo.save(this.itemRepo.create(data));
   }
 
-  async updateItem(id: number, data: Partial<DormitoryItem>): Promise<DormitoryItem> {
+  async updateItem(
+    id: number,
+    data: Partial<DormitoryItem>,
+  ): Promise<DormitoryItem> {
     const item = await this.itemRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException('항목을 찾을 수 없습니다.');
     Object.assign(item, data);
@@ -66,5 +76,10 @@ export class DormitoryService {
 
   async removeItem(id: number): Promise<void> {
     await this.itemRepo.delete(id);
+  }
+
+  // 폼 직접 입력 중 필드별 "번역" 버튼 트리거 전용 (단일 텍스트만 좁게 번역)
+  translateText(text: string): Promise<string> {
+    return translateKoToJa(text);
   }
 }

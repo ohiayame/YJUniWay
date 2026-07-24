@@ -1,5 +1,8 @@
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import type { DormitorySection } from '../../../api/dormitory';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import type { DormitorySection, DormitoryItem } from '../../../api/dormitory';
 
 const FLOOR_BADGE_STYLE: Record<string, { bg: string; color: string }> = {
   B1:  { bg: '#e8eaf6', color: '#3949ab' },
@@ -13,10 +16,20 @@ const FLOOR_BADGE_STYLE: Record<string, { bg: string; color: string }> = {
 interface FloorTimelineProps {
   floorSections: DormitorySection[];
   isKo: boolean;
+  isAdmin?: boolean;
+  onEditSection?: (section: DormitorySection) => void;
+  onAddItem?: (section: DormitorySection) => void;
+  onEditItem?: (section: DormitorySection, item: DormitoryItem) => void;
+  onDeleteItem?: (item: DormitoryItem) => void;
 }
 
 // 층별 안내 타임라인
-const FloorTimeline = ({ floorSections, isKo }: FloorTimelineProps) => (
+// 층(floor) 자체는 건물 구조상 고정이라 관리자가 새로 "추가"하거나 "삭제"하는 기능은 두지 않음 — 항목 추가/수정/삭제와 기존 층 정보 수정만 지원
+const FloorTimeline = ({
+  floorSections, isKo, isAdmin,
+  onEditSection,
+  onAddItem, onEditItem, onDeleteItem,
+}: FloorTimelineProps) => (
   <>
     <div style={{ fontSize: 11, fontWeight: 'bold', color: '#bbb', letterSpacing: 1, marginBottom: 10 }}>
       {isKo ? '층별 안내' : 'フロアガイド'}
@@ -66,35 +79,73 @@ const FloorTimeline = ({ floorSections, isKo }: FloorTimelineProps) => (
                     {isKo ? floor.subtitleKo : floor.subtitleJa}
                   </div>
                 )}
+
+                {/* 관리자 전용 섹션 수정 버튼 (층 자체는 삭제 불가) */}
+                {isAdmin && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 'auto', flexShrink: 0 }}>
+                    <button onClick={() => onEditSection?.(floor)} style={{ background: 'none', border: 'none', color: '#888', padding: 4, cursor: 'pointer', display: 'flex' }}>
+                      <EditIcon sx={{ fontSize: 15 }} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* 카드 바디 */}
-              {floor.items.length > 0 && (
+              {(floor.items.length > 0 || isAdmin) && (
                 <div style={{ padding: '0 14px 12px' }}>
                   {floor.items.map((item) => (
                     <div key={item.id} style={{
                       fontSize: 13, color: '#555', lineHeight: 1.5,
                       padding: '6px 0', borderTop: '1px solid #eee',
-                      textAlign: 'left',
+                      textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 6,
                     }}>
-                      ・{isKo ? item.textKo : item.textJa}
+                      <div style={{ flex: 1 }}>
+                        ・{isKo ? item.textKo : item.textJa}
 
-                      {/* 경고 메시지 */}
-                      {item.warningKo && (
-                        <div style={{ marginTop: 4 }}>
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 3,
-                            fontSize: 11, color: '#e67e22',
-                            background: '#fff3e0', borderRadius: 20,
-                            padding: '2px 8px',
-                          }}>
-                            <WarningAmberIcon sx={{ fontSize: 12, flexShrink: 0 }} />
-                            {isKo ? item.warningKo : item.warningJa}
-                          </span>
+                        {/* 경고 메시지 */}
+                        {item.warningKo && (
+                          <div style={{ marginTop: 4 }}>
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 3,
+                              fontSize: 11, color: '#e67e22',
+                              background: '#fff3e0', borderRadius: 20,
+                              padding: '2px 8px',
+                            }}>
+                              <WarningAmberIcon sx={{ fontSize: 12, flexShrink: 0 }} />
+                              {isKo ? item.warningKo : item.warningJa}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 관리자 전용 항목 수정/삭제 버튼 */}
+                      {isAdmin && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                          <button onClick={() => onEditItem?.(floor, item)} style={{ background: 'none', border: 'none', color: '#888', padding: 2, cursor: 'pointer', display: 'flex' }}>
+                            <EditIcon sx={{ fontSize: 14 }} />
+                          </button>
+                          <button onClick={() => onDeleteItem?.(item)} style={{ background: 'none', border: 'none', color: '#c62828', padding: 2, cursor: 'pointer', display: 'flex' }}>
+                            <DeleteIcon sx={{ fontSize: 14 }} />
+                          </button>
                         </div>
                       )}
                     </div>
                   ))}
+
+                  {/* 관리자 전용 항목 추가 버튼 */}
+                  {isAdmin && (
+                    <button
+                      onClick={() => onAddItem?.(floor)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        marginTop: 8, padding: '4px 10px', borderRadius: 20, border: 'none',
+                        background: '#e3f2fd', color: '#1565c0', fontSize: 11, cursor: 'pointer',
+                      }}
+                    >
+                      <AddIcon sx={{ fontSize: 13 }} />
+                      {isKo ? '항목 추가' : '項目追加'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

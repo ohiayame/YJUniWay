@@ -1,10 +1,13 @@
 import BlockIcon from '@mui/icons-material/Block';
 import KeyIcon from '@mui/icons-material/Key';
-import RecyclingIcon from '@mui/icons-material/Recycling';
 import LockIcon from '@mui/icons-material/Lock';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import type { DormitorySection } from '../../../api/dormitory';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import type { DormitorySection, DormitoryItem } from '../../../api/dormitory';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   '쓰레기 버리기': <DeleteOutlineIcon sx={{ fontSize: 16, color: '#000000' }} />,
@@ -14,10 +17,18 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 interface CategorySectionListProps {
   categorySections: DormitorySection[];
   isKo: boolean;
+  isAdmin?: boolean;
+  onAddItem?: (section: DormitorySection) => void;
+  onEditItem?: (section: DormitorySection, item: DormitoryItem) => void;
+  onDeleteItem?: (item: DormitoryItem) => void;
 }
 
 // 기타 카테고리 섹션 목록
-const CategorySectionList = ({ categorySections, isKo }: CategorySectionListProps) => (
+// 카테고리(쓰레기 버리기/규칙) 자체도 고정 구조라 관리자가 추가·수정·삭제할 수 없음(쓰레기통이 없어지는 일은 없으므로) — 항목 추가/수정/삭제만 지원
+const CategorySectionList = ({
+  categorySections, isKo, isAdmin,
+  onAddItem, onEditItem, onDeleteItem,
+}: CategorySectionListProps) => (
   <>
     <hr style={{ border: 'none', borderTop: '1px solid #f0f0f0', margin: '0 0 14px' }} />
 
@@ -51,11 +62,12 @@ const CategorySectionList = ({ categorySections, isKo }: CategorySectionListProp
                 ? <BlockIcon sx={{ fontSize: 14, color: '#c0392b', mt: '3px', flexShrink: 0 }} />
                 : item.pin
                   ? <LockIcon sx={{ fontSize: 14, color: '#856404', mt: '4px', flexShrink: 0 }} />
-                  : ii === 0
+                  // "쓰레기 버리기" 섹션의 첫 항목은 버리는 장소 안내로 고정 — 이 한 곳만 위치 아이콘, 나머지는 경고 아이콘
+                  : (cat.sectionKey === 'trash' && ii === 0)
                     ? <LocationOnIcon sx={{ fontSize: 14, color: '#888', mt: '3px', flexShrink: 0 }} />
-                    : <RecyclingIcon sx={{ fontSize: 14, color: '#888', mt: '3px', flexShrink: 0 }} />
+                    : <WarningAmberIcon sx={{ fontSize: 14, color: '#888', mt: '3px', flexShrink: 0 }} />
               }
-              <div>
+              <div style={{ flex: 1 }}>
                 {isKo ? item.textKo : item.textJa}
 
                 {/* 음식물쓰레기 통 비밀번호 */}
@@ -71,8 +83,35 @@ const CategorySectionList = ({ categorySections, isKo }: CategorySectionListProp
                   </div>
                 )}
               </div>
+
+              {/* 관리자 전용 항목 수정/삭제 버튼 */}
+              {isAdmin && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                  <button onClick={() => onEditItem?.(cat, item)} style={{ background: 'none', border: 'none', color: '#888', padding: 2, cursor: 'pointer', display: 'flex' }}>
+                    <EditIcon sx={{ fontSize: 14 }} />
+                  </button>
+                  <button onClick={() => onDeleteItem?.(item)} style={{ background: 'none', border: 'none', color: '#c62828', padding: 2, cursor: 'pointer', display: 'flex' }}>
+                    <DeleteIcon sx={{ fontSize: 14 }} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
+
+          {/* 관리자 전용 항목 추가 버튼 */}
+          {isAdmin && (
+            <button
+              onClick={() => onAddItem?.(cat)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                marginTop: 8, padding: '4px 10px', borderRadius: 20, border: 'none',
+                background: '#e3f2fd', color: '#1565c0', fontSize: 11, cursor: 'pointer',
+              }}
+            >
+              <AddIcon sx={{ fontSize: 13 }} />
+              {isKo ? '항목 추가' : '項目追加'}
+            </button>
+          )}
         </div>
       </div>
     ))}

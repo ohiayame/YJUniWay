@@ -71,3 +71,7 @@ export const updateItem = (id: number, data: Partial<Omit<DormitoryItem, 'id'>>)
 /** DELETE /dormitory/item/:id — 항목 삭제 (관리자) */
 export const removeItem = (id: number) =>
   apiClient.delete<void>(`/dormitory/item/${id}`);
+
+/** POST /dormitory/translate — 단일 텍스트 한→일 번역 (폼 필드별 "번역" 버튼 전용) */
+export const translateDormitoryText = (text: string) =>
+  apiClient.post<{ translated: string }>('/dormitory/translate', { text });
