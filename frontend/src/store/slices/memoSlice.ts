@@ -97,7 +97,7 @@ export const toggleMemoLine = createAsyncThunk(
   },
 );
 
-// 문서 전체 삭제 (작성자 본인 또는 교수만 호출 가능하도록 컴포넌트에서 버튼 노출을 제한)
+// 문서 전체 삭제 (작성자 본인 또는 관리자만 호출 가능하도록 컴포넌트에서 버튼 노출을 제한)
 export const removeMemoDocThunk = createAsyncThunk(
   'memo/removeDoc',
   async (payload: MemoTarget & { visibility: MemoVisibility; memoId: number }) => {

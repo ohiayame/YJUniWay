@@ -15,7 +15,7 @@ import apiClient from './apiClient';
 export interface Admin {
   id: number;
   name: string;
-  studentId: string | null;   // 스태프 학번 (교수는 null)
+  studentId: string | null;   // 스태프 학번 (관리자는 null)
   phone: string;
   role: 'professor' | 'staff';
   isApproved: boolean;
@@ -23,7 +23,7 @@ export interface Admin {
 }
 
 export interface LoginRequest {
-  studentId: string;  // 교수는 이름, 스태프는 학번
+  studentId: string;  // 관리자는 이름, 스태프는 학번
   password: string;
 }
 

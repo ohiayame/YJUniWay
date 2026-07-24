@@ -79,6 +79,6 @@ export const updateMemoBlockContent = (id: number, content: string) =>
 export const toggleMemoBlockChecked = (id: number) =>
   apiClient.patch<MemoBlockDto>(`/memo/blocks/${id}/toggle`);
 
-/** DELETE /memo/:id — 메모 문서 전체 삭제 (작성자 본인 또는 교수) */
+/** DELETE /memo/:id — 메모 문서 전체 삭제 (작성자 본인 또는 관리자) */
 export const removeMemoDoc = (id: number) =>
   apiClient.delete<void>(`/memo/${id}`);

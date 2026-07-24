@@ -10,6 +10,7 @@ const AdminSignupPage = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [studentId, setStudentId] = useState('');
+  const [isProfessor, setIsProfessor] = useState(false);
   const [phone, setPhone] = useState('');
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +43,14 @@ const AdminSignupPage = () => {
     setError(null);
     setLoading(true);
     try {
-      await createAdmin({ name, studentId, phone, role: 'staff', isApproved: false, password });
+      await createAdmin({
+        name,
+        studentId: isProfessor ? null : studentId,
+        phone,
+        role: 'staff',
+        isApproved: false,
+        password,
+      });
       setConfirming(false);
       setDone(true);
     } catch (err) {
@@ -92,7 +100,7 @@ const AdminSignupPage = () => {
               textAlign: 'left', lineHeight: 2,
             }}>
               <div><span style={{ color: '#aaa', marginRight: 8 }}>이름</span>{name}</div>
-              <div><span style={{ color: '#aaa', marginRight: 8 }}>학번</span>{studentId}</div>
+              <div><span style={{ color: '#aaa', marginRight: 8 }}>학번</span>{isProfessor ? '없음 (교수)' : studentId}</div>
               <div><span style={{ color: '#aaa', marginRight: 8 }}>전화번호</span>{phone}</div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -136,7 +144,7 @@ const AdminSignupPage = () => {
               가입 신청 완료
             </div>
             <div style={{ fontSize: 13, color: '#aaa', marginBottom: 28, lineHeight: 1.6 }}>
-              교수님의 승인 후<br />로그인하실 수 있습니다.
+              관리자의 승인 후<br />로그인하실 수 있습니다.
             </div>
             <button
               onClick={() => navigate('/admin')}
@@ -168,27 +176,47 @@ const AdminSignupPage = () => {
               }}>
                 <AdminPanelSettingsIcon sx={{ fontSize: 28, color: 'white' }} />
               </div>
-              <div style={{ fontSize: 18, fontWeight: 'bold', color: '#111' }}>스태프 가입 신청</div>
-              <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>교수님 승인 후 로그인 가능합니다</div>
+              <div style={{ fontSize: 18, fontWeight: 'bold', color: '#111' }}>
+                {isProfessor ? '교수님 가입 신청' : '스태프 가입 신청'}
+              </div>
+              <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>관리자 승인 후 로그인 가능합니다</div>
             </div>
 
             <form onSubmit={handleSubmit}>
               <Field label="*이름">
                 <input required style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="이름 입력" />
               </Field>
-              <Field label="*학번">
+              <Field label={isProfessor ? '학번 (선택)' : '*학번'}>
                 <input
-                  required
-                  style={inputStyle}
-                  value={studentId}
+                  required={!isProfessor}
+                  disabled={isProfessor}
+                  style={{
+                    ...inputStyle,
+                    ...(isProfessor ? { background: '#f5f5f5', color: '#bbb' } : {}),
+                  }}
+                  value={isProfessor ? '' : studentId}
                   onChange={e => setStudentId(e.target.value)}
-                  placeholder="7자리 숫자"
-                  pattern="\d{7}"
+                  placeholder={isProfessor ? '입력 없음' : '7자리 숫자'}
+                  pattern={isProfessor ? undefined : '\\d{7}'}
                   title="학번은 7자리 숫자여야 합니다"
                   inputMode="numeric"
                   maxLength={7}
                 />
               </Field>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 12, color: '#666', marginBottom: 14, cursor: 'pointer',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={isProfessor}
+                  onChange={e => {
+                    setIsProfessor(e.target.checked);
+                    if (e.target.checked) setStudentId('');
+                  }}
+                />
+                교수님의 경우 체크해주세요 (학번 입력 불필요)
+              </label>
               <Field label="*전화번호">
                 <input
                   required

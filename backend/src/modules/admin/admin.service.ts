@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
 import { Admin, AdminRole } from './admin.entity';
@@ -26,12 +31,12 @@ export class AdminService {
     identifier: string,
     password: string,
   ): Promise<{ accessToken: string; role: AdminRole; name: string; id: number }> {
-    // 교수는 이름으로, 스태프는 학번으로 로그인
+    // 학번이 있으면 학번으로, 없으면(교수 · 교수 가입 신청 중인 스태프) 이름으로 조회
     const byStudentId = await this.adminRepo.findOne({ where: { studentId: identifier } });
     const admin =
       byStudentId ??
       (await this.adminRepo.findOne({
-        where: { name: identifier, role: AdminRole.PROFESSOR },
+        where: { name: identifier, studentId: IsNull() },
       }));
 
     if (!admin) throw new UnauthorizedException('존재하지 않는 계정입니다.');
@@ -40,7 +45,7 @@ export class AdminService {
     if (admin.password !== hashed) throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
 
     if (admin.role === AdminRole.STAFF && !admin.isApproved) {
-      throw new UnauthorizedException('교수님의 승인이 필요합니다.');
+      throw new UnauthorizedException('관리자의 승인이 필요합니다.');
     }
 
     const payload = { sub: admin.id, role: admin.role };
@@ -60,9 +65,28 @@ export class AdminService {
     return this.adminRepo.save(admin);
   }
 
-  async update(id: number, data: Partial<Admin>): Promise<Admin> {
+  async update(id: number, data: Partial<Admin>, currentAdminId: number): Promise<Admin> {
     const admin = await this.adminRepo.findOne({ where: { id } });
     if (!admin) throw new NotFoundException('관리자를 찾을 수 없습니다.');
+
+    if (data.role && data.role !== admin.role) {
+      if (id === currentAdminId) {
+        throw new ForbiddenException('자기 자신의 권한은 변경할 수 없습니다.');
+      }
+      if (admin.role === AdminRole.PROFESSOR && !admin.studentId) {
+        const currentAdmin = await this.adminRepo.findOne({ where: { id: currentAdminId } });
+        if (currentAdmin?.studentId) {
+          throw new ForbiddenException('학번으로 가입한 관리자는 교수의 권한을 변경할 수 없습니다.');
+        }
+      }
+      if (admin.role === AdminRole.PROFESSOR && data.role === AdminRole.STAFF) {
+        const professorCount = await this.adminRepo.count({ where: { role: AdminRole.PROFESSOR } });
+        if (professorCount <= 1) {
+          throw new ForbiddenException('마지막 관리자는 스태프로 변경할 수 없습니다.');
+        }
+      }
+    }
+
     if (data.password) {
       data.password = crypto.createHash('sha256').update(data.password).digest('hex');
     }

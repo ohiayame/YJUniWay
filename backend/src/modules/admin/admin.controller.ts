@@ -7,13 +7,19 @@ import {
   Param,
   Body,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { AdminService } from './admin.service';
 import { Admin, AdminRole } from './admin.entity';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+
+interface RequestWithUser extends Request {
+  user: { id: number; role: AdminRole };
+}
 
 @ApiTags('admin')
 @Controller('admin')
@@ -26,12 +32,12 @@ export class AdminController {
     return this.adminService.login(body.studentId, body.password);
   }
 
-  // GET /api/admin → admins 테이블 전체 조회 (password 제외), 교수 전용
+  // GET /api/admin → admins 테이블 전체 조회 (password 제외), 관리자 전용
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRole.PROFESSOR)
   @ApiBearerAuth()
-  @ApiOperation({ summary: '관리자 목록 조회 (교수 전용)' })
+  @ApiOperation({ summary: '관리자 목록 조회 (관리자 전용)' })
   findAll() {
     return this.adminService.findAll();
   }
@@ -47,16 +53,20 @@ export class AdminController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRole.PROFESSOR)
   @ApiBearerAuth()
-  @ApiOperation({ summary: '관리자 수정 (교수 전용)' })
-  update(@Param('id') id: string, @Body() body: Partial<Admin>) {
-    return this.adminService.update(+id, body);
+  @ApiOperation({ summary: '관리자 수정 (관리자 전용)' })
+  update(
+    @Param('id') id: string,
+    @Body() body: Partial<Admin>,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.adminService.update(+id, body, req.user.id);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRole.PROFESSOR)
   @ApiBearerAuth()
-  @ApiOperation({ summary: '관리자 삭제 (교수 전용)' })
+  @ApiOperation({ summary: '관리자 삭제 (관리자 전용)' })
   remove(@Param('id') id: string) {
     return this.adminService.remove(+id);
   }

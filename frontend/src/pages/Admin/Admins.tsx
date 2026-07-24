@@ -1,25 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../store';
-import SchoolIcon from '@mui/icons-material/School';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { getAdmins, updateAdmin } from '../../api/admin';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { getAdmins, updateAdmin, removeAdmin } from '../../api/admin';
 import type { Admin } from '../../api/admin';
 
 const AdminListPage = () => {
   const navigate = useNavigate();
-  const { isAdmin, role } = useAppSelector((state) => state.auth);
+  const { isAdmin, role, id: currentAdminId } = useAppSelector((state) => state.auth);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const [roleChangeId, setRoleChangeId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     getAdmins().then(setAdmins).catch(() => setAdmins([]));
   }, []);
 
-  // 교수 미인증 시 차단
+  // 관리자 미인증 시 차단
   if (!isAdmin || role !== 'professor') {
     return (
       <div style={{
@@ -32,7 +35,7 @@ const AdminListPage = () => {
         }}>
           <CancelIcon sx={{ fontSize: 40, color: '#e57373', marginBottom: 1 }} />
           <div style={{ fontSize: 15, fontWeight: 'bold', color: '#111', marginBottom: 8 }}>접근 권한 없음</div>
-          <div style={{ fontSize: 12, color: '#aaa', marginBottom: 24 }}>교수만 접근할 수 있는 페이지입니다.</div>
+          <div style={{ fontSize: 12, color: '#aaa', marginBottom: 24 }}>관리자만 접근할 수 있는 페이지입니다.</div>
           <button
             onClick={() => navigate('/admin')}
             style={{
@@ -59,8 +62,30 @@ const AdminListPage = () => {
     }
   };
 
+  const changeRole = async (id: number) => {
+    const target = admins.find(a => a.id === id);
+    if (!target) return;
+    const nextRole = target.role === 'professor' ? 'staff' : 'professor';
+    try {
+      const updated = await updateAdmin(id, { role: nextRole, isApproved: true });
+      setAdmins(prev => prev.map(a => a.id === id ? updated : a));
+    } catch {
+      // API 오류 시 상태 유지
+    }
+  };
+
+  const deleteStaff = async (id: number) => {
+    try {
+      await removeAdmin(id);
+      setAdmins(prev => prev.filter(a => a.id !== id));
+    } catch {
+      // API 오류 시 상태 유지
+    }
+  };
+
   const professors = admins.filter(a => a.role === 'professor');
   const staffList = admins.filter(a => a.role === 'staff');
+  const isCurrentAdminStudentOrigin = !!admins.find(a => a.id === currentAdminId)?.studentId;
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#f0f0f0', overflowY: 'auto' }}>
@@ -85,17 +110,26 @@ const AdminListPage = () => {
 
       <div style={{ padding: '16px 16px 0' }}>
 
-        {/* 교수 섹션 */}
-        <SectionLabel label="교수" />
+        {/* 관리자 섹션 */}
+        <SectionLabel label="관리자" />
         <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
-          {professors.map((admin, idx) => (
-            <AdminRow
-              key={admin.id}
-              admin={admin}
-              isLast={idx === professors.length - 1}
-              onToggle={undefined}
-            />
-          ))}
+          {professors.map((admin, idx) => {
+            const isTrueProfessor = !admin.studentId;
+            const canChangeRole =
+              admin.id !== currentAdminId &&
+              professors.length > 1 &&
+              !(isCurrentAdminStudentOrigin && isTrueProfessor);
+            return (
+              <AdminRow
+                key={admin.id}
+                admin={admin}
+                isLast={idx === professors.length - 1}
+                onToggle={undefined}
+                onChangeRole={canChangeRole ? () => setRoleChangeId(admin.id) : undefined}
+                onDelete={undefined}
+              />
+            );
+          })}
         </div>
 
         {/* 스태프 섹션 */}
@@ -111,6 +145,8 @@ const AdminListPage = () => {
               admin={admin}
               isLast={idx === staffList.length - 1}
               onToggle={() => setPendingId(admin.id)}
+              onChangeRole={() => setRoleChangeId(admin.id)}
+              onDelete={() => setDeletingId(admin.id)}
             />
           ))}
         </div>
@@ -165,6 +201,99 @@ const AdminListPage = () => {
         </div>
       );
     })()}
+
+    {/* 역할 변경 확인 모달 */}
+    {roleChangeId !== null && (() => {
+      const target = admins.find(a => a.id === roleChangeId)!;
+      const nextRoleLabel = target.role === 'professor' ? '스태프' : '관리자';
+      return (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 24, zIndex: 100,
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 20, padding: '28px 24px',
+            width: '100%', maxWidth: 320, textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 'bold', color: '#111', marginBottom: 8 }}>
+              {nextRoleLabel}로 변경하시겠습니까?
+            </div>
+            <div style={{ fontSize: 12, color: '#aaa', marginBottom: 24 }}>
+              {target.name} ({target.studentId})
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setRoleChangeId(null)}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 12,
+                  border: '1px solid #eee', background: 'white',
+                  fontSize: 13, color: '#888', cursor: 'pointer',
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={() => { changeRole(roleChangeId); setRoleChangeId(null); }}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 12, border: 'none',
+                  background: '#1a1a2e', color: 'white',
+                  fontSize: 13, fontWeight: 'bold', cursor: 'pointer',
+                }}
+              >
+                변경
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
+
+    {/* 스태프 삭제 확인 모달 */}
+    {deletingId !== null && (() => {
+      const target = admins.find(a => a.id === deletingId)!;
+      return (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 24, zIndex: 100,
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 20, padding: '28px 24px',
+            width: '100%', maxWidth: 320, textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 'bold', color: '#111', marginBottom: 8 }}>
+              삭제하시겠습니까?
+            </div>
+            <div style={{ fontSize: 12, color: '#aaa', marginBottom: 24 }}>
+              {target.name} ({target.studentId})<br />삭제 후에는 되돌릴 수 없습니다.
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setDeletingId(null)}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 12,
+                  border: '1px solid #eee', background: 'white',
+                  fontSize: 13, color: '#888', cursor: 'pointer',
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={() => { deleteStaff(deletingId); setDeletingId(null); }}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 12, border: 'none',
+                  background: '#ffebee', color: '#c62828',
+                  fontSize: 13, fontWeight: 'bold', cursor: 'pointer',
+                }}
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
     </div>
   );
 };
@@ -177,10 +306,12 @@ const SectionLabel = ({ label }: { label: string }) => (
   </div>
 );
 
-const AdminRow = ({ admin, isLast, onToggle }: {
+const AdminRow = ({ admin, isLast, onToggle, onChangeRole, onDelete }: {
   admin: Admin;
   isLast: boolean;
   onToggle: (() => void) | undefined;
+  onChangeRole: (() => void) | undefined;
+  onDelete: (() => void) | undefined;
 }) => {
   const isProfessor = admin.role === 'professor';
 
@@ -197,7 +328,7 @@ const AdminRow = ({ admin, isLast, onToggle }: {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {isProfessor
-          ? <SchoolIcon sx={{ fontSize: 20, color: '#1565c0' }} />
+          ? <AdminPanelSettingsIcon sx={{ fontSize: 20, color: '#1565c0' }} />
           : <PersonIcon sx={{ fontSize: 20, color: '#888' }} />
         }
       </div>
@@ -206,45 +337,65 @@ const AdminRow = ({ admin, isLast, onToggle }: {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 'bold', color: '#111' }}>{admin.name}</div>
         <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
-          {admin.studentId ? `학번: ${admin.studentId}` : '교수님'}
+          {admin.studentId ? `학번: ${admin.studentId}` : (isProfessor ? '관리자' : '교수 가입 신청')}
           {' · '}{admin.phone}
         </div>
       </div>
 
-      {/* 승인 토글 (스태프만) */}
-      {onToggle && (
-        <button
-          onClick={onToggle}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            padding: '5px 10px', borderRadius: 20, border: 'none',
-            background: admin.isApproved ? '#e8f5e9' : '#fce4ec',
-            cursor: 'pointer', flexShrink: 0,
-          }}
-        >
-          {admin.isApproved
-            ? <CheckCircleIcon sx={{ fontSize: 14, color: '#2e7d32' }} />
-            : <CancelIcon sx={{ fontSize: 14, color: '#c62828' }} />
-          }
-          <span style={{
-            fontSize: 11, fontWeight: 'bold',
-            color: admin.isApproved ? '#2e7d32' : '#c62828',
-          }}>
-            {admin.isApproved ? '승인됨' : '미승인'}
-          </span>
-        </button>
-      )}
+      {/* 액션 버튼 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        {/* 승인하기 (스태프 · 미승인 상태만) */}
+        {onToggle && !admin.isApproved && (
+          <button
+            onClick={onToggle}
+            style={{
+              padding: '5px 12px', borderRadius: 20,
+              border: 'none', background: '#1a1a2e',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+              cursor: 'pointer', flexShrink: 0,
+              fontSize: 11, fontWeight: 'bold', color: 'white',
+            }}
+          >
+            승인하기
+          </button>
+        )}
 
-      {/* 교수는 승인 뱃지만 표시 */}
-      {isProfessor && (
-        <div style={{
-          fontSize: 11, color: '#1565c0',
-          background: '#e3f2fd', borderRadius: 20,
-          padding: '3px 10px', flexShrink: 0,
-        }}>
-          교수님
-        </div>
-      )}
+        {/* 관리자 ↔ 스태프 역할 변경 (관리자 · 승인된 스태프만) */}
+        {onChangeRole && (isProfessor || admin.isApproved) && (
+          <button
+            onClick={onChangeRole}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '5px 10px', borderRadius: 20,
+              border: '1px solid #90caf9', background: '#e3f2fd',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+              cursor: 'pointer', flexShrink: 0,
+            }}
+          >
+            <SwapHorizIcon sx={{ fontSize: 14, color: '#1565c0' }} />
+            <span style={{ fontSize: 11, fontWeight: 'bold', color: '#1565c0' }}>
+              권한
+            </span>
+          </button>
+        )}
+
+        {/* 스태프 삭제 */}
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            title="삭제"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 28, height: 28, borderRadius: '50%',
+              border: '1px solid #ffcdd2', background: 'white',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+              cursor: 'pointer', flexShrink: 0,
+            }}
+          >
+            <DeleteOutlineIcon sx={{ fontSize: 16, color: '#c62828' }} />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

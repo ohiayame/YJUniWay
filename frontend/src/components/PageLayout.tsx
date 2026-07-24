@@ -1,8 +1,11 @@
 import type React from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '../store';
+import { clearAdmin } from '../store/slices/authSlice';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import LogoutIcon from '@mui/icons-material/Logout';
 import BottomTab from './BottomTab';
 
 const today = new Date();
@@ -20,7 +23,9 @@ const PageLayout = ({ titleKo, titleJa, children }: PageLayoutProps) => {
   const { i18n } = useTranslation();
   const isKo = i18n.language === 'ko';
   const navigate = useNavigate();
-  const role = useAppSelector((state) => state.auth.role);
+  const dispatch = useAppDispatch();
+  const { role, isAdmin } = useAppSelector((state) => state.auth);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
     <div style={{ paddingBottom: 64, maxWidth: 480, margin: '0 auto', background: 'white', minHeight: '100vh' }}>
@@ -52,6 +57,19 @@ const PageLayout = ({ titleKo, titleJa, children }: PageLayoutProps) => {
               <span style={{ fontSize: 12, color: '#1a1a2e' }}>{isKo ? '관리자' : '管理者'}</span>
             </button>
           )}
+          {isAdmin && (
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              style={{
+                background: 'transparent', border: '1px solid #ddd', borderRadius: 20,
+                padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 4,
+                cursor: 'pointer',
+              }}
+            >
+              <LogoutIcon sx={{ fontSize: 14, color: '#888' }} />
+              <span style={{ fontSize: 12, color: '#888' }}>{isKo ? '로그아웃' : 'ログアウト'}</span>
+            </button>
+          )}
           <button
             onClick={() => i18n.changeLanguage(isKo ? 'ja' : 'ko')}
             style={{
@@ -69,6 +87,45 @@ const PageLayout = ({ titleKo, titleJa, children }: PageLayoutProps) => {
       </main>
 
       <BottomTab />
+
+      {showLogoutConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 24, zIndex: 200,
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 20, padding: '28px 24px',
+            width: '100%', maxWidth: 320, textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 'bold', color: '#111', marginBottom: 20 }}>
+              {isKo ? '로그아웃하시겠습니까?' : 'ログアウトしますか?'}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 12,
+                  border: '1px solid #eee', background: 'white',
+                  fontSize: 13, color: '#888', cursor: 'pointer',
+                }}
+              >
+                {isKo ? '취소' : 'キャンセル'}
+              </button>
+              <button
+                onClick={() => { dispatch(clearAdmin()); setShowLogoutConfirm(false); }}
+                style={{
+                  flex: 1, padding: 12, borderRadius: 12, border: 'none',
+                  background: '#1a1a2e', color: 'white',
+                  fontSize: 13, fontWeight: 'bold', cursor: 'pointer',
+                }}
+              >
+                {isKo ? '로그아웃' : 'ログアウト'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -52,11 +52,14 @@ axiosInstance.interceptors.request.use(
 // ──────────────────────────────────────────────
 // 응답 인터셉터: 401 Unauthorized → 토큰 제거 후 관리자 로그인 페이지로 이동
 // 네트워크 에러 등 다른 에러는 호출 측으로 그대로 전파
+// 단, 로그인 요청 자체의 401(아이디/비밀번호 오류, 미승인 등)은
+// "세션 만료"가 아니라 로그인 폼이 직접 처리해야 할 에러이므로 제외
 // ──────────────────────────────────────────────
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLoginRequest = error.config?.url?.includes('/admin/login');
+    if (error.response?.status === 401 && !isLoginRequest) {
       localStorage.removeItem('token');
       localStorage.removeItem('adminAuth');
       window.location.href = '/admin';
