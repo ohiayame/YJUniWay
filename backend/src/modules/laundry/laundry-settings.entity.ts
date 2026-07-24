@@ -26,13 +26,6 @@ export class LaundrySettings {
   @Column({ name: 'warning_ja', type: 'text', nullable: true })
   warningJa: string | null;
 
-  // 미디어 파일 경로 (/uploads/...)
-  @Column({ name: 'video_url', type: 'varchar', length: 255, nullable: true })
-  videoUrl: string | null;
-
-  @Column({ name: 'image_url', type: 'varchar', length: 255, nullable: true })
-  imageUrl: string | null;
-
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

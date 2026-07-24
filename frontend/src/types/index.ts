@@ -78,8 +78,6 @@ export interface LaundrySettings {
   appUrl: string;
   warningKo: string | null;
   warningJa: string | null;
-  videoUrl: string | null;   // 서버 업로드 경로 (/uploads/...) 또는 null
-  imageUrl: string | null;   // 서버 업로드 경로 (/uploads/...) 또는 null
   updatedAt: string;
 }
 

@@ -182,8 +182,6 @@ CREATE TABLE laundry_settings (
   app_url      VARCHAR(255) NOT NULL DEFAULT 'https://www.metaclub.im/' COMMENT '결제 앱 URL',
   warning_ko   TEXT                                                   COMMENT '주의사항 (한국어)',
   warning_ja   TEXT                                                   COMMENT '주의사항 (일본어)',
-  video_url    VARCHAR(255)                                           COMMENT '앱 사용법 영상 경로 (/uploads/...)',
-  image_url    VARCHAR(255)                                           COMMENT '세제 이미지 경로 (/uploads/...)',
   updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT chk_laundry_single_row CHECK (id = 1)
