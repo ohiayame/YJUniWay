@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LaundrySettings } from './laundry-settings.entity';
 import { LaundryStep } from './laundry-step.entity';
+import { translateKoToJa } from '../../utils/translate.util';
 
 @Injectable()
 export class LaundryService {
@@ -23,8 +24,38 @@ export class LaundryService {
     return settings;
   }
 
+  async updateSettings(
+    data: Partial<LaundrySettings>,
+  ): Promise<LaundrySettings> {
+    await this.settingsRepo.save({ ...data, id: 1 });
+    return this.getSettings();
+  }
+
+  // 사용 순서 --------------------------------------------------
+
   // laundry_steps 테이블 전체 조회 (sort_order 오름차순)
   getSteps(): Promise<LaundryStep[]> {
     return this.stepRepo.find({ order: { sortOrder: 'ASC' } });
+  }
+
+  createStep(data: Partial<LaundryStep>): Promise<LaundryStep> {
+    return this.stepRepo.save(this.stepRepo.create(data));
+  }
+
+  async updateStep(
+    id: number,
+    data: Partial<LaundryStep>,
+  ): Promise<LaundryStep> {
+    await this.stepRepo.update(id, data);
+    return this.stepRepo.findOne({ where: { id } }) as Promise<LaundryStep>;
+  }
+
+  async removeStep(id: number): Promise<void> {
+    await this.stepRepo.delete(id);
+  }
+
+  // 폼 직접 입력 중 필드별 "번역" 버튼 트리거 전용 (단일 텍스트만 좁게 번역)
+  translateText(text: string): Promise<string> {
+    return translateKoToJa(text);
   }
 }
