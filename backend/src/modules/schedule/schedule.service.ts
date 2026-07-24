@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Anthropic from '@anthropic-ai/sdk';
 import { Schedule } from './schedule.entity';
+import { translateKoToJa } from '../../utils/translate.util';
 
 // Stage 1(추출) 응답 항목 — 한국어 필드만 담긴다
 interface ExtractedScheduleItem {
@@ -277,22 +278,7 @@ export class ScheduleService {
   }
 
   // 폼 직접 입력 중 필드별 "번역" 버튼 트리거 전용 (단일 텍스트만 좁게 번역, 문서 추출과 무관)
-  async translateText(text: string): Promise<string> {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: `다음 한국어 텍스트를 자연스러운 일본어로 번역해주세요. 번역 결과만 출력하고 다른 설명은 추가하지 마세요.\n\n${text}`,
-        },
-      ],
-    });
-
-    return response.content[0].type === 'text'
-      ? response.content[0].text.trim()
-      : '';
+  translateText(text: string): Promise<string> {
+    return translateKoToJa(text);
   }
 }
