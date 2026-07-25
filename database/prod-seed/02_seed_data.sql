@@ -82,8 +82,8 @@ INSERT INTO app_settings (id, curfew_time, wifi_ssid, wifi_password, school_addr
  '22:00',                          -- TODO: 실제 통금 시간
  'TODO_WIFI_SSID',                 -- TODO: 실제 와이파이 SSID
  'TODO_WIFI_PASSWORD',             -- TODO: 실제 와이파이 비밀번호
- 'TODO: 실제 학교 주소 (한국어)',
- 'TODO: 実際の学校住所（日本語）',
+ '대구광역시 북구 복현로 35',
+ '大邱広域市 北区 伏賢路 35',
  NULL,                             -- TODO: 배포 시점 공지 없으면 NULL 유지
  NULL,
  NULL,                             -- TODO: "내일 집합" 공지 — 없으면 NULL 유지
@@ -92,14 +92,17 @@ INSERT INTO app_settings (id, curfew_time, wifi_ssid, wifi_password, school_addr
 
 -- ─────────────────────────────────────────────────────────────
 -- emergency_contacts
--- TODO: 실제 담당자/연락처로 교체 필요
+-- 전화번호는 개인정보라 git에 커밋되는 이 파일에는 넣지 않는다.
+-- 아래는 의도적인 placeholder이며 실제 번호로 바꾸지 않는다 —
+-- 배포 후 관리자 화면(설정 > 비상연락처, ContactFormModal)에서
+-- 직접 입력할 것.
 -- ─────────────────────────────────────────────────────────────
 TRUNCATE TABLE emergency_contacts;
 
 INSERT INTO emergency_contacts (id, label_ko, label_ja, phone) VALUES
-(1, '담당 관리자',   '担当管理者',    'TODO: 010-0000-0000'),
-(2, '기숙사 관리실', '寮管理室',      'TODO: 053-000-0000'),
-(3, '학교 대표번호', '学校代表番号',  'TODO: 053-000-0000');
+(1, '담당 관리자',   '担当管理者',    '010-0000-0000'),
+(2, '기숙사 관리실', '寮管理室',      '010-000-0000'),
+(3, '학교 대표번호', '学校代表番号',  '010-000-0000');
 
 -- ─────────────────────────────────────────────────────────────
 -- laundry_settings  (singleton, id = 1)
@@ -122,7 +125,7 @@ TRUNCATE TABLE laundry_steps;
 
 INSERT INTO laundry_steps (id, sort_order, text_ko, text_ja) VALUES
 (1, 1, '앱 「메타클럽」 다운로드',          'アプリ「メタクラブ」をダウンロード'),
-(2, 2, '현금으로 충전 (편의점 · 프런트)',   '現金でチャージ（コンビニ・フロント）'),
+(2, 2, '현금으로 충전 (편의점)',   '現金でチャージ（コンビニ）'),
 (3, 3, '세탁기 QR코드 스캔',               '洗濯機のQRコードをスキャン'),
 (4, 4, '코스 선택 후 앱으로 결제',          'コースを選択してアプリで決済'),
 (5, 5, '세탁 완료 후 바로 꺼내기',          '洗濯終了後は速やかに取り出す');
